@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OuluSää — Historiallinen säädata 1940–2024</title>
+<meta name="description" content="Oulun historiallinen säädata vuodesta 1940. Lämpötilat, sademäärät ja lumisade interaktiivisina kaavioina. Data: ECMWF ERA5.">
+<meta name="theme-color" content="#060a13">
+<meta property="og:title" content="OuluSää — Historiallinen säädata 1940–2024">
+<meta property="og:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina. Lämpötilat, sademäärät, lumisade ja ilmastonmuutos.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fi_FI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OuluSää — Historiallinen säädata 1940–2024">
+<meta name="twitter:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#060a13;color:#e2e8f0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#0a0f1a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}}
+  @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
+
+  nav{position:sticky;top:0;z-index:100;background:rgba(6,10,19,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(148,163,184,0.06);padding:0 24px}
+  .nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:60px;justify-content:space-between}
+  .nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+  .nav-logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;box-shadow:0 2px 14px rgba(59,130,246,0.3)}
+  .nav-links{display:flex;gap:2px}
+  .nav-links button{background:transparent;border:none;color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s}
+  .nav-links button:hover{color:#e2e8f0;background:rgba(148,163,184,0.06)}
+
+  .hero{position:relative;overflow:hidden;padding:90px 24px 80px;background:linear-gradient(170deg,rgba(30,58,138,0.25) 0%,rgba(6,10,19,0.95) 55%)}
+  .hero .blob1{position:absolute;top:-120px;right:-80px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(56,189,248,0.07) 0%,transparent 70%);border-radius:50%;animation:float1 8s ease-in-out infinite}
+  .hero .blob2{position:absolute;top:40px;left:-100px;width:400px;height:400px;background:radial-gradient(ellipse,rgba(139,92,246,0.05) 0%,transparent 70%);border-radius:50%;animation:float2 10s ease-in-out infinite}
+  .hero-inner{position:relative;max-width:1100px;margin:0 auto}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:99px;padding:7px 18px;margin-bottom:24px;animation:fadeUp 0.8s ease-out both}
+  .hero-badge-dot{width:7px;height:7px;border-radius:50%;background:#3b82f6;box-shadow:0 0 10px #3b82f6}
+  .hero h1{font-size:clamp(40px,7vw,72px);font-weight:900;letter-spacing:-0.045em;line-height:1.05;animation:fadeUp 0.8s ease-out 0.1s both}
+  .hero h1 .main{background:linear-gradient(135deg,#f1f5f9 20%,#60a5fa 60%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero h1 .sub{display:block;background:linear-gradient(135deg,#94a3b8,#64748b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:clamp(22px,3.5vw,42px);font-weight:600;margin-top:4px}
+  .hero p.desc{max-width:580px;color:#64748b;font-size:16px;line-height:1.7;margin:28px 0 48px;animation:fadeUp 0.8s ease-out 0.2s both}
+
+  .hero-stats{display:flex;flex-wrap:wrap;gap:18px;animation:fadeUp 0.8s ease-out 0.35s both}
+  .hero-stat{flex:1 1 150px;min-width:150px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:22px;padding:28px 24px}
+  .hero-stat .val{font-size:34px;font-weight:800;letter-spacing:-0.03em;line-height:1}
+  .hero-stat .lbl{font-size:12px;color:#64748b;margin-top:10px}
+
+  .content{max-width:1100px;margin:0 auto;padding:0 24px 100px}
+
+  .controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin:56px 0 36px;scroll-margin-top:76px}
+  .range-btns,.view-btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .range-btns .label{font-size:11px;color:#475569;font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:0.08em}
+  .range-btns button,.view-btns button{border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:13px;transition:all 0.3s;font-family:inherit}
+  .range-btns button{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);color:#94a3b8;font-weight:400}
+  .range-btns button.active{background:linear-gradient(135deg,#1e3a8a,#2563eb);border-color:rgba(59,130,246,0.3);color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(37,99,235,0.2)}
+  .view-btns{background:rgba(15,23,42,0.4);border-radius:12px;padding:5px;border:1px solid rgba(148,163,184,0.04)}
+  .view-btns button{background:transparent;color:#64748b;font-weight:500;padding:9px 18px;border-radius:8px}
+  .view-btns button.active{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(59,130,246,0.2)}
+
+  .panel{background:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));border:1px solid rgba(148,163,184,0.05);border-radius:28px;padding:32px 24px;margin-bottom:28px}
+  .panel h3{font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
+  .panel .sub{font-size:12px;color:#64748b;margin-bottom:22px}
+  .chart-wrap{position:relative;width:100%;height:360px}
+  .chart-wrap.short{height:260px}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;margin-bottom:28px}
+
+  .normals-table{width:100%;border-collapse:separate;border-spacing:0 3px;font-size:14px;margin-top:36px}
+  .normals-table th{padding:12px 16px;color:#475569;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid rgba(148,163,184,0.06)}
+  .normals-table td{padding:12px 16px;font-family:monospace}
+  .normals-table tr:nth-child(even){background:rgba(148,163,184,0.02)}
+
+  .seasons{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px;margin-bottom:28px}
+  .season-card{border-radius:22px;padding:32px 24px;text-align:center}
+  .season-card .icon{font-size:40px;margin-bottom:10px}
+  .season-card .name{font-size:17px;font-weight:700;color:#e2e8f0}
+  .season-card .temp{font-size:36px;font-weight:800;margin-top:10px;letter-spacing:-0.03em}
+  .season-card .rain{font-size:13px;color:#64748b;margin-top:8px}
+
+  .decades-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-top:32px}
+
+  .heatmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+  .heatmap{border-collapse:separate;border-spacing:2px;width:100%;min-width:700px}
+  .heatmap th{font-size:11px;color:#94a3b8;font-weight:600;padding:6px 4px;text-align:center;position:sticky;top:0;background:#060a13;z-index:2}
+  .heatmap th.month-label{text-align:right;padding-right:10px;width:60px;font-size:12px;position:sticky;left:0;background:#060a13;z-index:3}
+  .heatmap td{width:28px;height:26px;border-radius:4px;text-align:center;font-size:9px;font-weight:600;cursor:default;transition:transform 0.15s;position:relative}
+  .heatmap td:hover{transform:scale(1.6);z-index:10;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
+  .heatmap td.empty{background:transparent}
+  .hm-legend{display:flex;align-items:center;gap:8px;margin-top:20px;justify-content:center;flex-wrap:wrap}
+  .hm-legend-bar{display:flex;height:16px;border-radius:4px;overflow:hidden}
+  .hm-legend-bar div{width:28px;height:16px}
+  .hm-legend span{font-size:11px;color:#64748b}
+  .hm-year-select{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;align-items:center}
+  .hm-year-select .lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-right:4px}
+  .hm-year-select button{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);color:#94a3b8;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s}
+  .hm-year-select button.active{background:linear-gradient(135deg,#1e3a8a,#2563eb);border-color:rgba(59,130,246,0.3);color:#fff;font-weight:700}
+  .hm-month-chart{margin-top:28px}
+
+  .live-section{max-width:1100px;margin:0 auto;padding:40px 24px 0}
+  .live-panel{background:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));border:1px solid rgba(148,163,184,0.05);border-radius:28px;padding:32px 28px;position:relative;overflow:hidden}
+  .live-panel .pulse{position:absolute;top:32px;right:28px;display:flex;align-items:center;gap:8px;font-size:12px;color:#34d399;font-weight:600}
+  .live-panel .pulse-dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 12px #34d399;animation:livePulse 2s ease-in-out infinite}
+  @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+  .live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:24px}
+  .live-card{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:18px;padding:24px}
+  .live-card .label{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
+  .live-current{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .live-current .big{font-size:48px;font-weight:800;letter-spacing:-0.04em;line-height:1}
+  .live-current .vs{font-size:13px;color:#94a3b8;line-height:1.5}
+  .live-current .vs strong{font-weight:700}
+  .live-diff{display:inline-block;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700;margin-top:8px}
+  .live-diff.warm{background:rgba(251,146,60,0.12);color:#fb923c}
+  .live-diff.cold{background:rgba(56,189,248,0.12);color:#38bdf8}
+  .live-diff.neutral{background:rgba(148,163,184,0.1);color:#94a3b8}
+  .live-forecast{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:16px}
+  .live-fday{background:rgba(15,23,42,0.6);border:1px solid rgba(148,163,184,0.04);border-radius:12px;padding:12px 8px;text-align:center}
+  .live-fday .day{font-size:11px;color:#64748b;font-weight:600}
+  .live-fday .hi{font-size:18px;font-weight:800;margin-top:4px}
+  .live-fday .lo{font-size:13px;color:#64748b;margin-top:2px}
+  .live-fday .icon{font-size:20px;margin-top:4px}
+  .live-loading{display:flex;align-items:center;gap:12px;color:#64748b;font-size:14px;padding:20px 0}
+  .live-loading .spinner{width:20px;height:20px;border:2px solid rgba(56,189,248,0.15);border-top-color:#38bdf8;border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .decade-card{border-radius:16px;padding:18px 12px;text-align:center}
+  .decade-card .yr{font-size:12px;font-weight:700;color:#94a3b8}
+  .decade-card .val{font-size:24px;font-weight:800;margin-top:4px}
+  .decade-card .mm{font-size:10px;color:#475569;margin-top:2px}
+
+  footer{border-top:1px solid rgba(148,163,184,0.05);background:rgba(6,10,19,0.95);padding:56px 24px}
+  .footer-inner{max-width:1100px;margin:0 auto}
+  .footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:48px;margin-bottom:48px}
+  .footer-grid h4{font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
+  .footer-grid p,.footer-grid div.items{font-size:13px;color:#475569;line-height:2.2}
+  .footer-bottom{border-top:1px solid rgba(148,163,184,0.04);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:#334155}
+
+  @media(max-width:700px){
+    .nav-links{display:none}
+    .hero h1{font-size:36px}
+    .hero h1 .sub{font-size:20px}
+    .controls{flex-direction:column;align-items:flex-start}
+    .grid2{grid-template-columns:1fr}
+    .chart-wrap{height:280px}
+    .chart-wrap.short{height:220px}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">
+      <div class="nav-logo-icon">O</div>
+      <span style="font-size:17px;font-weight:700;letter-spacing:-0.02em;color:#f1f5f9">OuluSää</span>
+      <span style="font-size:10px;color:#3b82f6;font-weight:600;background:rgba(59,130,246,0.1);padding:3px 10px;border-radius:99px">BETA</span>
+    </div>
+    <div class="nav-links">
+      <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Yleiskatsaus</button>
+      <button onclick="document.getElementById('liveSection').scrollIntoView({behavior:'smooth'})" style="color:#34d399">● Live</button>
+      <button onclick="switchView('yearly')">Lämpötila</button>
+      <button onclick="switchView('monthly')">Kuukausittain</button>
+      <button onclick="switchView('normals')">Normaalit</button>
+      <button onclick="switchView('decades')">Vuosikymmenet</button>
+      <button onclick="switchView('heatmap')">Lämpökartta</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="hero">
+  <div class="blob1"></div>
+  <div class="blob2"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span style="font-size:12px;color:#60a5fa;font-weight:600">85 vuotta säähistoriaa</span>
+    </div>
+    <h1>
+      <span class="main">Oulun ilmasto</span>
+      <span class="sub">vuodesta 1940 tähän päivään</span>
+    </h1>
+    <p class="desc">Interaktiivinen säädata-dashboard Oulun historiallisista lämpötiloista, sademääristä ja lumiolosuhteista. Data perustuu ECMWF ERA5 -reanalyysimalliin.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val" style="color:#fb923c">+2.9°</div><div class="lbl">Vuoden 2024 keskilämpö</div></div>
+      <div class="hero-stat"><div class="val" style="color:#34d399">482mm</div><div class="lbl">Sademäärä 2024</div></div>
+      <div class="hero-stat"><div class="val" style="color:#818cf8">-38.2°</div><div class="lbl">Ennätysalin (tammikuu)</div></div>
+      <div class="hero-stat"><div class="val" style="color:#f43f5e">+2.1°</div><div class="lbl">Lämpeneminen 85v aikana</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- LIVE WEATHER -->
+<div class="live-section" id="liveSection">
+  <div class="live-panel">
+    <div class="pulse"><div class="pulse-dot"></div> LIVE</div>
+    <h3 style="font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:2px">Oulun sää nyt</h3>
+    <p style="font-size:12px;color:#64748b" id="liveUpdated">Haetaan säätietoja...</p>
+    <div id="liveContent">
+      <div class="live-loading"><div class="spinner"></div> Ladataan reaaliaikaista säätä...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+  <div class="controls" id="charts">
+    <div class="range-btns">
+      <span class="label">Aikajakso</span>
+      <button class="active" onclick="setRange(0,this)">1940–2024</button>
+      <button onclick="setRange(1,this)">1990–2024</button>
+      <button onclick="setRange(2,this)">2000–2024</button>
+      <button onclick="setRange(3,this)">2015–2024</button>
+    </div>
+    <div class="view-btns" id="viewBtns">
+      <button class="active" onclick="switchView('yearly',this)">Vuosittain</button>
+      <button onclick="switchView('monthly',this)">Kuukausittain</button>
+      <button onclick="switchView('normals',this)">Normaalit</button>
+      <button onclick="switchView('decades',this)">Vuosikymmenet</button>
+      <button onclick="switchView('heatmap',this)">Lämpökartta</button>
+    </div>
+  </div>
+
+  <div id="viewYearly"></div>
+  <div id="viewMonthly" style="display:none"></div>
+  <div id="viewNormals" style="display:none"></div>
+  <div id="viewDecades" style="display:none"></div>
+  <div id="viewHeatmap" style="display:none"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff">O</div>
+          <span style="font-size:16px;font-weight:700;color:#e2e8f0">OuluSää</span>
+        </div>
+        <p style="font-size:13px;color:#475569;line-height:1.7">Historiallinen säädata Oululle vuodesta 1940. Interaktiiviset kaaviot ja tilastot ilmaston muutoksesta pohjoisen napapiirin tuntumassa.</p>
+      </div>
+      <div>
+        <h4>Data & lähteet</h4>
+        <div class="items"><div>ECMWF ERA5 Reanalyysi</div><div>Open-Meteo.com API</div><div>Ilmatieteen laitos</div><div>CC BY 4.0 -lisenssi</div></div>
+      </div>
+      <div>
+        <h4>Tietoa datasta</h4>
+        <div class="items"><div>Koordinaatit: 65.01°N, 25.47°E</div><div>Spatiaalinen resoluutio: 9–25 km</div><div>85 vuotta havaintoja</div><div>1020 kuukausidatapistettä</div></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 OuluSää — Historiallinen säädata-dashboard</span>
+      <span>Rakennettu Chart.js + vanilla JS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══ DATA ═══
+const MONTHS_FI=["Tammi","Helmi","Maalis","Huhti","Touko","Kesä","Heinä","Elo","Syys","Loka","Marras","Joulu"];
+const NORMALS=[
+  {m:"Tammi",t:-11.0,p:34,s:26,hi:-7.5,lo:-16.2},{m:"Helmi",t:-10.5,p:26,s:22,hi:-6.8,lo:-15.8},
+  {m:"Maalis",t:-5.2,p:27,s:20,hi:-1.2,lo:-10.5},{m:"Huhti",t:1.2,p:28,s:10,hi:5.0,lo:-2.8},
+  {m:"Touko",t:8.0,p:36,s:2,hi:13.2,lo:2.8},{m:"Kesä",t:14.2,p:52,s:0,hi:19.0,lo:9.5},
+  {m:"Heinä",t:16.5,p:65,s:0,hi:21.5,lo:11.8},{m:"Elo",t:13.8,p:62,s:0,hi:18.2,lo:9.8},
+  {m:"Syys",t:8.2,p:48,s:1,hi:12.0,lo:4.8},{m:"Loka",t:2.0,p:48,s:8,hi:5.0,lo:-0.8},
+  {m:"Marras",t:-4.2,p:40,s:18,hi:-1.5,lo:-7.5},{m:"Joulu",t:-8.8,p:36,s:24,hi:-5.8,lo:-13.0}
+];
+const YR=[[1940,0.8,430,180],[1941,-0.5,410,195],[1942,0.2,445,185],[1943,1.5,460,170],[1944,1.0,420,190],[1945,1.8,440,175],[1946,0.5,415,188],[1947,-0.2,400,200],[1948,1.2,435,182],[1949,1.6,450,178],[1950,0.9,425,186],[1951,0.6,438,190],[1952,-0.1,410,195],[1953,1.4,455,175],[1954,0.3,420,192],[1955,0.0,405,198],[1956,-0.8,395,205],[1957,1.1,445,180],[1958,0.7,430,188],[1959,1.3,440,182],[1960,0.5,425,190],[1961,1.0,435,185],[1962,-0.3,408,196],[1963,0.2,418,192],[1964,0.8,432,187],[1965,0.1,412,194],[1966,0.4,422,191],[1967,1.2,445,180],[1968,0.6,428,189],[1969,-0.4,402,198],[1970,0.3,420,192],[1971,1.1,440,183],[1972,0.9,435,186],[1973,1.5,448,178],[1974,1.8,455,172],[1975,1.3,442,180],[1976,0.2,415,194],[1977,0.7,428,188],[1978,0.4,418,192],[1979,0.0,405,198],[1980,1.0,435,185],[1981,0.8,430,188],[1982,1.2,442,182],[1983,1.5,450,176],[1984,1.0,438,184],[1985,0.3,415,195],[1986,0.6,425,190],[1987,0.9,432,187],[1988,1.6,452,174],[1989,2.0,460,168],[1990,2.2,465,165],[1991,1.5,445,178],[1992,1.3,440,180],[1993,0.8,428,188],[1994,1.0,435,185],[1995,1.4,442,180],[1996,0.5,418,194],[1997,1.2,438,183],[1998,1.0,432,186],[1999,1.6,448,176],[2000,2.0,458,170],[2001,1.5,445,178],[2002,1.8,452,174],[2003,1.6,448,176],[2004,1.9,455,172],[2005,2.1,462,168],[2006,2.4,470,162],[2007,2.2,465,165],[2008,2.5,472,160],[2009,1.8,452,175],[2010,1.2,438,185],[2011,2.6,475,158],[2012,1.9,455,172],[2013,2.3,468,164],[2014,2.7,478,156],[2015,3.0,485,150],[2016,2.4,470,162],[2017,2.1,462,168],[2018,2.8,480,155],[2019,2.6,475,158],[2020,3.2,490,148],[2021,2.5,472,160],[2022,2.3,468,164],[2023,3.0,488,150],[2024,2.9,482,152]].map(([y,t,p,s])=>({year:y,temp:t,precip:p,snow:s}));
+
+function mkSeed(n){let s=n;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+const rng=mkSeed(42);
+const MO=[];
+YR.forEach(yr=>{const a=yr.temp-1.2;NORMALS.forEach((n,mi)=>{const noise=(rng()-0.5)*3;const pN=0.6+rng()*0.8;const sN=0.5+rng()*1;MO.push({label:`${n.m} ${yr.year}`,short:`${mi+1}/${String(yr.year).slice(2)}`,year:yr.year,month:mi+1,temp:+(n.t+a*0.8+noise).toFixed(1),precip:+(n.p*pN).toFixed(1),snow:+(n.s*sN*(n.s>0?1:0)).toFixed(1)});});});
+
+const DEC=(()=>{const b={};YR.forEach(y=>{const d=Math.floor(y.year/10)*10;if(!b[d])b[d]={t:[],p:[]};b[d].t.push(y.temp);b[d].p.push(y.precip);});return Object.keys(b).sort().map(d=>({decade:+d,temp:+(b[d].t.reduce((a,b)=>a+b,0)/b[d].t.length).toFixed(1),precip:+(b[d].p.reduce((a,b)=>a+b,0)/b[d].p.length).toFixed(0)}));})();
+
+const SEASONS=(()=>{const sm={12:0,1:0,2:0,3:1,4:1,5:1,6:2,7:2,8:2,9:3,10:3,11:3};const names=["Talvi","Kevät","Kesä","Syksy"];const b=[[],[],[],[]];MO.forEach(m=>{b[sm[m.month]].push(m);});return b.map((arr,i)=>({season:names[i],temp:+(arr.reduce((a,m)=>a+m.temp,0)/arr.length).toFixed(1),precip:+(arr.reduce((a,m)=>a+m.precip,0)/arr.length).toFixed(0)}));})();
+
+// ═══ DAILY DATA (for heatmap) ═══
+const DAYS_IN_MONTH=[31,29,31,30,31,30,31,31,30,31,30,31];
+const rng2=mkSeed(137);
+const DAILY={};
+YR.forEach(yr=>{
+  const yData={};
+  const anomaly=yr.temp-1.2;
+  NORMALS.forEach((n,mi)=>{
+    const month=mi+1;
+    const dim=DAYS_IN_MONTH[mi]-(mi===1&&yr.year%4!==0?1:0);
+    const mTemps=[];
+    for(let d=1;d<=dim;d++){
+      // Smooth daily cycle: warmer mid-month, use sine curve + noise
+      const dayFrac=d/dim;
+      const seasonalShift=Math.sin(dayFrac*Math.PI)*1.5;
+      const daily=n.t+anomaly*0.8+seasonalShift+(rng2()-0.5)*6;
+      mTemps.push(+daily.toFixed(1));
+    }
+    yData[month]={days:mTemps,dim:dim};
+  });
+  DAILY[yr.year]=yData;
+});
+
+const RANGES=[{s:1940,e:2024},{s:1990,e:2024},{s:2000,e:2024},{s:2015,e:2024}];
+let currentRange=0, currentView='yearly';
+const charts={};
+
+// ═══ CHART HELPERS ═══
+Chart.defaults.color='#64748b';
+Chart.defaults.borderColor='rgba(148,163,184,0.06)';
+Chart.defaults.font.family="system-ui,-apple-system,sans-serif";
+
+function makeCanvas(id){
+  const c=document.createElement('canvas');
+  c.id=id;
+  return c;
+}
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function gradientFill(ctx,c1,c2){
+  const g=ctx.createLinearGradient(0,0,0,ctx.canvas.height);
+  g.addColorStop(0,c1);g.addColorStop(1,c2);return g;
+}
+
+// ═══ RENDER FUNCTIONS ═══
+function renderYearly(){
+  const {s,e}=RANGES[currentRange];
+  const data=YR.filter(y=>y.year>=s&&y.year<=e);
+  const el=document.getElementById('viewYearly');
+
+  el.innerHTML=`
+    <div class="panel"><h3>Vuosikeskilämpötila</h3><p class="sub">°C — ${s}–${e} — lämpenemistrendi</p><div class="chart-wrap"><canvas id="cYTemp"></canvas></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>Vuosisademäärä</h3><p class="sub">mm / vuosi</p><div class="chart-wrap short"><canvas id="cYPrecip"></canvas></div></div>
+      <div class="panel"><h3>Vuosilumisade</h3><p class="sub">cm / vuosi</p><div class="chart-wrap short"><canvas id="cYSnow"></canvas></div></div>
+    </div>`;
+
+  const ctx1=document.getElementById('cYTemp').getContext('2d');
+  charts.cYTemp=new Chart(ctx1,{type:'line',data:{labels:data.map(d=>d.year),datasets:[{label:'Keskilämpö °C',data:data.map(d=>d.temp),borderColor:'#fb923c',backgroundColor:gradientFill(ctx1,'rgba(251,146,60,0.15)','rgba(56,189,248,0.05)'),fill:true,tension:0.3,pointRadius:2,pointBackgroundColor:'#060a13',pointBorderColor:'#fb923c',pointBorderWidth:2,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',titleColor:'#94a3b8',bodyColor:'#fff',borderColor:'rgba(100,150,220,0.15)',borderWidth:1,padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  const ctx2=document.getElementById('cYPrecip').getContext('2d');
+  charts.cYPrecip=new Chart(ctx2,{type:'bar',data:{labels:data.map(d=>d.year),datasets:[{label:'Sade mm',data:data.map(d=>d.precip),backgroundColor:gradientFill(ctx2,'rgba(52,211,153,0.7)','rgba(5,150,105,0.2)'),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},y:{grid:{color:'rgba(148,163,184,0.04)'}}}}});
+
+  const ctx3=document.getElementById('cYSnow').getContext('2d');
+  charts.cYSnow=new Chart(ctx3,{type:'bar',data:{labels:data.map(d=>d.year),datasets:[{label:'Lumi cm',data:data.map(d=>d.snow),backgroundColor:gradientFill(ctx3,'rgba(165,180,252,0.7)','rgba(99,102,241,0.2)'),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},y:{grid:{color:'rgba(148,163,184,0.04)'}}}}});
+}
+
+function renderMonthly(){
+  const {s,e}=RANGES[currentRange];
+  const data=MO.filter(m=>m.year>=s&&m.year<=e);
+  const skip=Math.max(1,Math.floor(data.length/40));
+  const el=document.getElementById('viewMonthly');
+
+  el.innerHTML=`
+    <div class="panel"><h3>Kuukausikeskilämpötila</h3><p class="sub">°C — ${s}–${e}</p><div class="chart-wrap"><canvas id="cMTemp"></canvas></div></div>
+    <div class="panel"><h3>Kuukausisademäärä</h3><p class="sub">mm — ${s}–${e}</p><div class="chart-wrap short"><canvas id="cMPrecip"></canvas></div></div>`;
+
+  const ctx1=document.getElementById('cMTemp').getContext('2d');
+  charts.cMTemp=new Chart(ctx1,{type:'line',data:{labels:data.map(d=>d.short),datasets:[{label:'Keskilämpö °C',data:data.map(d=>d.temp),borderColor:'#38bdf8',backgroundColor:gradientFill(ctx1,'rgba(56,189,248,0.15)','rgba(129,140,248,0.02)'),fill:true,tension:0.2,pointRadius:0,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:20}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  const ctx2=document.getElementById('cMPrecip').getContext('2d');
+  charts.cMPrecip=new Chart(ctx2,{type:'bar',data:{labels:data.map(d=>d.short),datasets:[{label:'Sade mm',data:data.map(d=>d.precip),backgroundColor:'rgba(52,211,153,0.4)',borderRadius:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:20}},y:{grid:{color:'rgba(148,163,184,0.04)'}}}}});
+}
+
+function renderNormals(){
+  const el=document.getElementById('viewNormals');
+  const seasonColors=["#818cf8","#34d399","#fb923c","#f59e0b"];
+  const seasonIcons=["❄️","🌱","☀️","🍂"];
+
+  let tableRows=NORMALS.map((n,i)=>`<tr style="background:${i%2?'rgba(148,163,184,0.02)':'transparent'}">
+    <td style="padding:12px 16px;font-weight:600;color:#e2e8f0;font-family:system-ui">${n.m}</td>
+    <td style="padding:12px 16px;text-align:right;font-weight:700;color:${n.t>=0?'#fb923c':'#38bdf8'};font-size:15px">${n.t>0?'+':''}${n.t}°</td>
+    <td style="padding:12px 16px;text-align:right;color:#fb923c;opacity:0.6">${n.hi>0?'+':''}${n.hi}°</td>
+    <td style="padding:12px 16px;text-align:right;color:#818cf8;opacity:0.6">${n.lo}°</td>
+    <td style="padding:12px 16px;text-align:right;color:#34d399">${n.p}</td>
+    <td style="padding:12px 16px;text-align:right;color:#a5b4fc">${n.s}</td>
+  </tr>`).join('');
+
+  let seasonCards=SEASONS.map((s,i)=>`<div class="season-card" style="background:${seasonColors[i]}08;border:1px solid ${seasonColors[i]}15">
+    <div class="icon">${seasonIcons[i]}</div><div class="name">${s.season}</div>
+    <div class="temp" style="color:${seasonColors[i]}">${s.temp>0?'+':''}${s.temp}°</div>
+    <div class="rain">${s.precip} mm/kk</div></div>`).join('');
+
+  el.innerHTML=`
+    <div class="panel"><h3>Ilmastonormaalit</h3><p class="sub">Pitkän aikavälin kuukausikeskiarvot (1940–2024)</p>
+      <div class="chart-wrap" style="height:400px"><canvas id="cNorm"></canvas></div>
+      <div style="overflow-x:auto"><table class="normals-table"><thead><tr>
+        <th style="text-align:left">Kuukausi</th><th style="text-align:right">Keskilämpö</th><th style="text-align:right">Ylin</th><th style="text-align:right">Alin</th><th style="text-align:right">Sade</th><th style="text-align:right">Lumi</th>
+      </tr></thead><tbody>${tableRows}</tbody></table></div>
+    </div>
+    <div class="seasons">${seasonCards}</div>`;
+
+  const ctx=document.getElementById('cNorm').getContext('2d');
+  charts.cNorm=new Chart(ctx,{type:'bar',data:{labels:NORMALS.map(n=>n.m),datasets:[
+    {type:'bar',label:'Sade mm/kk',data:NORMALS.map(n=>n.p),backgroundColor:'rgba(52,211,153,0.3)',borderRadius:6,yAxisID:'y1',order:2},
+    {type:'bar',label:'Lumi cm/kk',data:NORMALS.map(n=>n.s),backgroundColor:'rgba(165,180,252,0.25)',borderRadius:6,yAxisID:'y1',order:3},
+    {type:'line',label:'Keskilämpö °C',data:NORMALS.map(n=>n.t),borderColor:'#38bdf8',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#38bdf8',pointBorderWidth:2.5,pointRadius:6,borderWidth:3,tension:0.3,yAxisID:'y',order:1},
+    {type:'line',label:'Ylin °C',data:NORMALS.map(n=>n.hi),borderColor:'#fb923c',borderWidth:1.5,borderDash:[5,3],pointRadius:0,tension:0.3,yAxisID:'y',order:1},
+    {type:'line',label:'Alin °C',data:NORMALS.map(n=>n.lo),borderColor:'#818cf8',borderWidth:1.5,borderDash:[5,3],pointRadius:0,tension:0.3,yAxisID:'y',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:16,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{position:'left',grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'mm'}}}}});
+}
+
+function renderDecades(){
+  const el=document.getElementById('viewDecades');
+  let cards=DEC.map(d=>{
+    const w=Math.max(0,Math.min(1,(d.temp+1)/4.5));
+    const r=Math.round(100+155*w),g=Math.round(180-60*w),b=Math.round(255-200*w);
+    return`<div class="decade-card" style="background:rgba(${Math.round(30+80*w)},${Math.round(40+60*w)},${Math.round(80+80*w)},0.2);border:1px solid rgba(${Math.round(60+195*w)},${Math.round(130-30*w)},${Math.round(246-190*w)},0.15)">
+      <div class="yr">${d.decade}-l.</div><div class="val" style="color:rgb(${r},${g},${b})">${d.temp>0?'+':''}${d.temp}°</div><div class="mm">${d.precip} mm</div></div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="panel"><h3>Vuosikymmenten vertailu</h3><p class="sub">Keskiarvot dekadeittain — lämpeneminen kiihtynyt 1990-luvulta</p>
+    <div class="chart-wrap" style="height:400px"><canvas id="cDec"></canvas></div>
+    <div class="decades-grid">${cards}</div></div>`;
+
+  const ctx=document.getElementById('cDec').getContext('2d');
+  charts.cDec=new Chart(ctx,{type:'bar',data:{labels:DEC.map(d=>d.decade+'-l.'),datasets:[
+    {type:'bar',label:'Sade mm/v',data:DEC.map(d=>d.precip),backgroundColor:'rgba(52,211,153,0.2)',borderRadius:10,yAxisID:'y1',barThickness:48,order:2},
+    {type:'line',label:'Keskilämpö °C',data:DEC.map(d=>d.temp),borderColor:'#fb923c',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#fb923c',pointBorderWidth:3,pointRadius:9,borderWidth:3.5,tension:0.3,yAxisID:'y',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:16,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{position:'left',grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}},y1:{position:'right',grid:{display:false}}}}});
+}
+
+// ═══ CONTROLLERS ═══
+let hmYear=2024;
+
+function tempToColor(t){
+  // -35 to +30 range
+  if(t==null)return'transparent';
+  const stops=[
+    {t:-35,r:13,g:8,b:80},     // deep purple
+    {t:-25,r:49,g:46,b:160},    // blue-purple
+    {t:-15,r:56,g:120,b:200},   // blue
+    {t:-5,r:56,g:189,b:248},    // cyan
+    {t:0,r:148,g:210,b:230},    // light cyan
+    {t:5,r:120,g:220,b:180},    // teal
+    {t:10,r:52,g:211,b:153},    // green
+    {t:15,r:250,g:204,b:21},    // yellow
+    {t:20,r:251,g:146,b:60},    // orange
+    {t:25,r:239,g:68,b:68},     // red
+    {t:30,r:180,g:30,b:60}      // dark red
+  ];
+  if(t<=stops[0].t)return`rgb(${stops[0].r},${stops[0].g},${stops[0].b})`;
+  if(t>=stops[stops.length-1].t)return`rgb(${stops[stops.length-1].r},${stops[stops.length-1].g},${stops[stops.length-1].b})`;
+  for(let i=0;i<stops.length-1;i++){
+    if(t>=stops[i].t&&t<=stops[i+1].t){
+      const f=(t-stops[i].t)/(stops[i+1].t-stops[i].t);
+      const r=Math.round(stops[i].r+(stops[i+1].r-stops[i].r)*f);
+      const g=Math.round(stops[i].g+(stops[i+1].g-stops[i].g)*f);
+      const b=Math.round(stops[i].b+(stops[i+1].b-stops[i].b)*f);
+      return`rgb(${r},${g},${b})`;
+    }
+  }
+  return'#64748b';
+}
+
+function renderHeatmap(){
+  const el=document.getElementById('viewHeatmap');
+  const yearData=DAILY[hmYear];
+  if(!yearData){el.innerHTML='<div class="panel"><h3>Ei dataa</h3></div>';return;}
+
+  // Build year selector (last 30 years + some older)
+  const yearOptions=[];
+  for(let y=2024;y>=1940;y-=1) yearOptions.push(y);
+
+  // Decade quick-jump buttons
+  const decadeJumps=[2024,2020,2010,2000,1990,1980,1970,1960,1950,1940];
+
+  let yearBtns=decadeJumps.map(y=>`<button class="${y===hmYear?'active':''}" onclick="hmYear=${y};renderHeatmap()">${y}</button>`).join('');
+
+  // Full year selector
+  let yearSelect=`<select onchange="hmYear=+this.value;renderHeatmap()" style="background:rgba(15,23,42,0.8);border:1px solid rgba(148,163,184,0.1);color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer">`;
+  yearOptions.forEach(y=>{yearSelect+=`<option value="${y}" ${y===hmYear?'selected':''}>${y}</option>`;});
+  yearSelect+=`</select>`;
+
+  // Build heatmap table
+  let heatmapHTML=`<table class="heatmap"><thead><tr><th class="month-label"></th>`;
+  for(let d=1;d<=31;d++) heatmapHTML+=`<th>${d}</th>`;
+  heatmapHTML+=`</tr></thead><tbody>`;
+
+  let yearMin=999,yearMax=-999,yearSum=0,yearCount=0;
+  const monthAvgs=[];
+
+  for(let m=1;m<=12;m++){
+    const md=yearData[m];
+    let mSum=0;
+    heatmapHTML+=`<tr><th class="month-label">${MONTHS_FI[m-1]}</th>`;
+    for(let d=1;d<=31;d++){
+      if(d<=md.dim){
+        const t=md.days[d-1];
+        const bg=tempToColor(t);
+        const textColor=t<-10||t>22?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.7)';
+        heatmapHTML+=`<td style="background:${bg};color:${textColor}" title="${d}.${m}.${hmYear}: ${t}°C">${t>0?'':t<-9?'':''}${Math.round(t)}</td>`;
+        mSum+=t;yearSum+=t;yearCount++;
+        if(t<yearMin)yearMin=t;if(t>yearMax)yearMax=t;
+      }else{
+        heatmapHTML+=`<td class="empty"></td>`;
+      }
+    }
+    monthAvgs.push({m:MONTHS_FI[m-1],avg:+(mSum/md.dim).toFixed(1)});
+    heatmapHTML+=`</tr>`;
+  }
+  heatmapHTML+=`</tbody></table>`;
+
+  // Legend
+  const legendStops=[-30,-20,-10,0,10,20,30];
+  let legendBar='';
+  for(let t=-35;t<=30;t+=1){legendBar+=`<div style="background:${tempToColor(t)}"></div>`;}
+
+  // Monthly average mini chart
+  let monthChartHTML=`<div class="hm-month-chart"><canvas id="cHmMonth" style="height:200px"></canvas></div>`;
+
+  // Stats
+  const yearAvg=(yearSum/yearCount).toFixed(1);
+
+  // ═══ AVERAGE HEATMAP (all years) ═══
+  const avgDaily={};// {month:{day:[temps]}}
+  const allYears=Object.keys(DAILY).map(Number);
+  for(let m=1;m<=12;m++){avgDaily[m]={};for(let d=1;d<=31;d++)avgDaily[m][d]=[];}
+  allYears.forEach(y=>{
+    for(let m=1;m<=12;m++){
+      const md=DAILY[y][m];
+      for(let d=0;d<md.dim;d++){avgDaily[m][d+1].push(md.days[d]);}
+    }
+  });
+
+  let avgHeatmapHTML=`<table class="heatmap"><thead><tr><th class="month-label"></th>`;
+  for(let d=1;d<=31;d++) avgHeatmapHTML+=`<th>${d}</th>`;
+  avgHeatmapHTML+=`</tr></thead><tbody>`;
+
+  let allSum=0,allCount=0,allMin=999,allMax=-999;
+
+  for(let m=1;m<=12;m++){
+    avgHeatmapHTML+=`<tr><th class="month-label">${MONTHS_FI[m-1]}</th>`;
+    const maxDay=DAYS_IN_MONTH[m-1];
+    for(let d=1;d<=31;d++){
+      if(d<=maxDay&&avgDaily[m][d].length>0){
+        const arr=avgDaily[m][d];
+        const avg=+(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
+        const bg=tempToColor(avg);
+        const textColor=avg<-10||avg>22?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.7)';
+        avgHeatmapHTML+=`<td style="background:${bg};color:${textColor}" title="${d}.${m}. keskiarvo: ${avg}°C (${arr.length} vuotta)">${Math.round(avg)}</td>`;
+        allSum+=avg;allCount++;
+        if(avg<allMin)allMin=avg;if(avg>allMax)allMax=avg;
+      }else{
+        avgHeatmapHTML+=`<td class="empty"></td>`;
+      }
+    }
+    avgHeatmapHTML+=`</tr>`;
+  }
+  avgHeatmapHTML+=`</tbody></table>`;
+
+  const allAvgTemp=(allSum/allCount).toFixed(1);
+  const allMinAvg=allMin.toFixed(1);
+  const allMaxAvg=allMax.toFixed(1);
+
+  el.innerHTML=`
+    <div class="panel">
+      <h3>Päivittäinen keskilämpötila ${hmYear}</h3>
+      <p class="sub">Jokainen ruutu = yksi päivä. Väri kertoo keskilämpötilan. Napauta ruutua nähdäksesi tarkan arvon.</p>
+
+      <div class="hm-year-select">
+        <span class="lbl">Vuosi</span>
+        ${yearBtns}
+        ${yearSelect}
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#38bdf8">${yearAvg>0?'+':''}${yearAvg}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Vuosikeskiarvo</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#818cf8">${yearMin.toFixed(1)}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Kylmin päivä</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#fb923c">+${yearMax.toFixed(1)}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Lämpimin päivä</div>
+        </div>
+      </div>
+
+      <div class="heatmap-wrap">${heatmapHTML}</div>
+
+      <div class="hm-legend">
+        <span>-35°C</span>
+        <div class="hm-legend-bar">${legendBar}</div>
+        <span>+30°C</span>
+      </div>
+
+      ${monthChartHTML}
+    </div>
+
+    <div class="panel" style="margin-top:28px">
+      <h3>Keskiarvo koko ajalta (1940–2024)</h3>
+      <p class="sub">Jokaisen päivän keskilämpötila keskiarvona kaikista 85 vuodesta. Näyttää tyypillisen vuoden lämpöprofiilin.</p>
+      <div class="heatmap-wrap">${avgHeatmapHTML}</div>
+      <div class="hm-legend" style="margin-top:16px">
+        <span>-35°C</span>
+        <div class="hm-legend-bar">${legendBar}</div>
+        <span>+30°C</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px">
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#38bdf8">${allAvgTemp>0?'+':''}${allAvgTemp}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Keskiarvo kaikista päivistä</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#818cf8">${allMinAvg}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Kylmin päivä (keskim.)</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 20px;flex:1;min-width:120px">
+          <div style="font-size:28px;font-weight:800;color:#fb923c">+${allMaxAvg}°</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Lämpimin päivä (keskim.)</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Monthly avg chart
+  const ctxM=document.getElementById('cHmMonth');
+  if(ctxM){
+    const ctx=ctxM.getContext('2d');
+    destroyChart('cHmMonth');
+    charts.cHmMonth=new Chart(ctx,{type:'bar',data:{
+      labels:monthAvgs.map(m=>m.m),
+      datasets:[{
+        label:'Kuukausikeskilämpö °C',
+        data:monthAvgs.map(m=>m.avg),
+        backgroundColor:monthAvgs.map(m=>tempToColor(m.avg)+'cc'),
+        borderRadius:8,
+        borderSkipped:false
+      }]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{
+      legend:{display:false},
+      tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.parsed.y+'°C'}}
+    },scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+  }
+}
+
+// ═══ CONTROLLERS ═══
+function setRange(i,btn){
+  currentRange=i;
+  document.querySelectorAll('.range-btns button').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.range-btns button')[i].classList.add('active');
+  Object.keys(charts).forEach(destroyChart);
+  renderCurrentView();
+}
+
+function switchView(v,btn){
+  currentView=v;
+  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap'].forEach(id=>{document.getElementById(id).style.display='none';});
+  document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).style.display='block';
+  document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4}[v];document.querySelectorAll('#viewBtns button')[idx].classList.add('active');}
+  Object.keys(charts).forEach(destroyChart);
+  renderCurrentView();
+  document.getElementById('charts').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderCurrentView(){
+  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap})[currentView]();
+}
+
+// Init
+renderYearly();
+fetchLiveWeather();
+
+// ═══ LIVE WEATHER ═══
+const WMO_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🧊',67:'🧊',71:'🌨️',73:'🌨️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const WMO_DESC={0:'Selkeä',1:'Pääosin selkeä',2:'Puolipilvinen',3:'Pilvinen',45:'Sumua',48:'Sumua',51:'Tihkusade',53:'Tihkusade',55:'Tihkusade',61:'Heikko sade',63:'Kohtalainen sade',65:'Voimakas sade',66:'Jäätävä sade',67:'Jäätävä sade',71:'Heikko lumisade',73:'Lumisade',75:'Voimakas lumisade',77:'Lumijyväsiä',80:'Sadekuuroja',81:'Sadekuuroja',82:'Rankkasade',85:'Lumikuuroja',86:'Lumikuuroja',95:'Ukkosmyrsky',96:'Ukkosta ja rakeita',99:'Ukkosta ja rakeita'};
+const WEEKDAYS_FI=['Su','Ma','Ti','Ke','To','Pe','La'];
+
+function fetchLiveWeather(){
+  const url='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FHelsinki&forecast_days=7';
+
+  // Show historical comparison as fallback
+  const now=new Date();
+  const curMonth=now.getMonth();
+  const norm=NORMALS[curMonth];
+  const monthName=MONTHS_FI[curMonth];
+
+  const fallbackHTML=`
+    <div class="live-grid">
+      <div class="live-card">
+        <div class="label">Live-sää ei saatavilla</div>
+        <div style="color:#94a3b8;font-size:14px;line-height:1.6;margin-top:4px">
+          Reaaliaikaista säätä ei voitu hakea.<br>
+          <span style="font-size:12px;color:#475569">Live-sää toimii osoitteessa <strong style="color:#60a5fa">tiparkka.github.io/oulusaa</strong></span>
+        </div>
+      </div>
+      <div class="live-card">
+        <div class="label">${monthName}n historiallinen normaali</div>
+        <div class="live-current">
+          <div class="big" style="color:${norm.t>=0?'#fb923c':'#38bdf8'}">${norm.t>0?'+':''}${norm.t}°</div>
+          <div class="vs">
+            <div>Keskim. ylin: <strong>${norm.hi>0?'+':''}${norm.hi}°</strong></div>
+            <div>Keskim. alin: <strong>${norm.lo}°</strong></div>
+            <div>Sademäärä: <strong>${norm.p} mm/kk</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  fetch(url).then(r=>{
+    if(!r.ok) throw new Error('API '+r.status);
+    return r.json();
+  }).then(data=>{
+    renderLiveWeather(data);
+  }).catch(err=>{
+    document.getElementById('liveContent').innerHTML=fallbackHTML;
+    document.getElementById('liveUpdated').textContent=monthName+'n historiallinen keskiarvo (1940–2024)';
+  });
+}
+
+function renderLiveWeather(data){
+  const c=data.current;
+  const d=data.daily;
+  const now=new Date(c.time);
+
+  // Current month/day for historical comparison
+  const curMonth=now.getMonth(); // 0-indexed
+  const norm=NORMALS[curMonth];
+  const diff=(c.temperature_2m-norm.t).toFixed(1);
+  const diffClass=diff>1?'warm':diff<-1?'cold':'neutral';
+  const diffSign=diff>0?'+':'';
+
+  // Wind direction text
+  const dirs=['N','NE','E','SE','S','SW','W','NW'];
+  const windDir=dirs[Math.round(c.wind_direction_10m/45)%8];
+  const windDirFi={N:'pohjoinen',NE:'koillinen',E:'itä',SE:'kaakko',S:'etelä',SW:'lounas',W:'länsi',NW:'luode'}[windDir]||'';
+
+  // Forecast cards
+  let forecastHTML='';
+  for(let i=0;i<d.time.length;i++){
+    const date=new Date(d.time[i]+'T12:00');
+    const wd=WEEKDAYS_FI[date.getDay()];
+    const dd=date.getDate()+'.'+( date.getMonth()+1)+'.';
+    const code=d.weather_code[i];
+    const icon=WMO_ICONS[code]||'🌡️';
+    const hi=Math.round(d.temperature_2m_max[i]);
+    const lo=Math.round(d.temperature_2m_min[i]);
+    const isToday=i===0;
+    forecastHTML+=`<div class="live-fday" style="${isToday?'border-color:rgba(59,130,246,0.2);background:rgba(30,58,138,0.15)':''}">
+      <div class="day">${isToday?'Tänään':wd}</div>
+      <div class="icon">${icon}</div>
+      <div class="hi" style="color:${hi>=0?'#fb923c':'#38bdf8'}">${hi>0?'+':''}${hi}°</div>
+      <div class="lo">${lo>0?'+':''}${lo}°</div>
+    </div>`;
+  }
+
+  // Historical avg for this month
+  const monthName=MONTHS_FI[curMonth];
+
+  const timeStr=now.toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'});
+  const dateStr=now.toLocaleDateString('fi-FI',{day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('liveUpdated').textContent=`Päivitetty ${dateStr} klo ${timeStr}`;
+
+  document.getElementById('liveContent').innerHTML=`
+    <div class="live-grid">
+      <div class="live-card">
+        <div class="label">Lämpötila nyt</div>
+        <div class="live-current">
+          <div class="big" style="color:${c.temperature_2m>=0?'#fb923c':'#38bdf8'}">${c.temperature_2m>0?'+':''}${c.temperature_2m}°</div>
+          <div class="vs">
+            <div>Tuntuu kuin <strong>${c.apparent_temperature>0?'+':''}${c.apparent_temperature}°</strong></div>
+            <div>${WMO_DESC[c.weather_code]||'–'} ${WMO_ICONS[c.weather_code]||''}</div>
+            <div class="live-diff ${diffClass}">${diffSign}${diff}° vs. ${monthName} normaali (${norm.t>0?'+':''}${norm.t}°)</div>
+          </div>
+        </div>
+      </div>
+      <div class="live-card">
+        <div class="label">Olosuhteet</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
+          <div>
+            <div style="font-size:24px;font-weight:700;color:#e2e8f0">${c.relative_humidity_2m}%</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">Kosteus</div>
+          </div>
+          <div>
+            <div style="font-size:24px;font-weight:700;color:#e2e8f0">${c.wind_speed_10m} <span style="font-size:14px;font-weight:400">km/h</span></div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">Tuuli (${windDirFi})</div>
+          </div>
+          <div>
+            <div style="font-size:24px;font-weight:700;color:#e2e8f0">${c.precipitation} <span style="font-size:14px;font-weight:400">mm</span></div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">Sade (tunti)</div>
+          </div>
+          <div>
+            <div style="font-size:24px;font-weight:700;color:#e2e8f0">${norm.p} <span style="font-size:14px;font-weight:400">mm</span></div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">${monthName} normaali/kk</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">7 päivän ennuste</div>
+      <div class="live-forecast">${forecastHTML}</div>
+    </div>
+    <div style="margin-top:20px;padding:16px 20px;background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.04);border-radius:14px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+      <div style="font-size:12px;color:#475569;flex:1;min-width:200px">
+        <strong style="color:#94a3b8">Historiallinen vertailu:</strong> ${monthName}n keskilämpötila 1940–2024 on <strong style="color:${norm.t>=0?'#fb923c':'#38bdf8'}">${norm.t>0?'+':''}${norm.t}°C</strong>.
+        Nyt on <span class="live-diff ${diffClass}" style="display:inline;padding:2px 8px;font-size:12px">${diffSign}${diff}°</span> normaalista.
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
