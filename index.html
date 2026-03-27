@@ -317,25 +317,17 @@ const DAYS_IN_MONTH=[31,29,31,30,31,30,31,31,30,31,30,31];
 let NORMALS=[],YR=[],MO=[],DEC=[],SEASONS=[],DAILY={};
 
 // ═══ ASYNC DATA LOADER ═══
-// Build chunks dynamically up to yesterday
+// Build chunks dynamically up to yesterday (max 10y per chunk)
 function buildArchiveChunks(){
   const yesterday=new Date(Date.now()-86400000);
   const endDate=yesterday.toISOString().slice(0,10);
-  const endYear=yesterday.getFullYear();
-  const chunks=[
+  return [
     ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
     ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
     ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
-    ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31']
+    ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
+    ['2020-01-01',endDate]
   ];
-  // Add remaining years in 5-year chunks up to yesterday
-  for(let y=2020;y<=endYear;y+=5){
-    const s=y+'-01-01';
-    const eYear=Math.min(y+4,endYear);
-    const e=(eYear<endYear)?eYear+'-12-31':endDate;
-    chunks.push([s,e]);
-  }
-  return chunks;
 }
 const ARCHIVE_CHUNKS=buildArchiveChunks();
 
