@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OuluSää — Historiallinen säädata 1940–2024</title>
+<title>OuluSää — Historiallinen säädata 1940–tänään</title>
 <meta name="description" content="Oulun historiallinen säädata vuodesta 1940. Lämpötilat, sademäärät ja lumisade interaktiivisina kaavioina. Data: ECMWF ERA5.">
 <meta name="theme-color" content="#060a13">
-<meta property="og:title" content="OuluSää — Historiallinen säädata 1940–2024">
-<meta property="og:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina. Lämpötilat, sademäärät, lumisade ja ilmastonmuutos.">
+<meta property="og:title" content="OuluSää — Historiallinen säädata 1940–tänään">
+<meta property="og:description" content="Yli 85 vuotta Oulun säätä interaktiivisina kaavioina. Lämpötilat, sademäärät, lumisade ja ilmastonmuutos.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fi_FI">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="OuluSää — Historiallinen säädata 1940–2024">
-<meta name="twitter:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina.">
+<meta name="twitter:title" content="OuluSää — Historiallinen säädata 1940–tänään">
+<meta name="twitter:description" content="Yli 85 vuotta Oulun säätä interaktiivisina kaavioina.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -223,7 +223,7 @@
   <div class="hero-inner">
     <div class="hero-badge">
       <div class="hero-badge-dot"></div>
-      <span style="font-size:12px;color:#60a5fa;font-weight:600">85 vuotta säähistoriaa</span>
+      <span style="font-size:12px;color:#60a5fa;font-weight:600">Yli 85 vuotta säähistoriaa</span>
     </div>
     <h1>
       <span class="main">Oulun ilmasto</span>
@@ -234,7 +234,7 @@
       <div class="hero-stat"><div class="val" style="color:#fb923c" id="heroTemp">–</div><div class="lbl">Vuoden 2024 keskilämpö</div></div>
       <div class="hero-stat"><div class="val" style="color:#34d399" id="heroPrecip">–</div><div class="lbl">Sademäärä 2024</div></div>
       <div class="hero-stat"><div class="val" style="color:#818cf8" id="heroRecordLo">–</div><div class="lbl">Ennätysalin</div></div>
-      <div class="hero-stat"><div class="val" style="color:#f43f5e" id="heroWarming">–</div><div class="lbl">Lämpeneminen 85v aikana</div></div>
+      <div class="hero-stat"><div class="val" style="color:#f43f5e" id="heroWarming">–</div><div class="lbl">Lämpeneminen 1940-luvulta</div></div>
     </div>
   </div>
 </header>
@@ -256,7 +256,7 @@
   <div class="controls" id="charts">
     <div class="range-btns">
       <span class="label">Aikajakso</span>
-      <button class="active" onclick="setRange(0,this)">1940–2024</button>
+      <button class="active" onclick="setRange(0,this)">1940–tänään</button>
       <button onclick="setRange(1,this)">1990–2024</button>
       <button onclick="setRange(2,this)">2000–2024</button>
       <button onclick="setRange(3,this)">2015–2024</button>
@@ -300,7 +300,7 @@
       </div>
       <div>
         <h4>Tietoa datasta</h4>
-        <div class="items"><div>Koordinaatit: 65.01°N, 25.47°E</div><div>Spatiaalinen resoluutio: 9–25 km</div><div>85 vuotta havaintoja</div><div>1020 kuukausidatapistettä</div></div>
+        <div class="items"><div>Koordinaatit: 65.01°N, 25.47°E</div><div>Spatiaalinen resoluutio: 9–25 km</div><div>Yli 85 vuotta havaintoja</div><div>1020 kuukausidatapistettä</div></div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -317,12 +317,27 @@ const DAYS_IN_MONTH=[31,29,31,30,31,30,31,31,30,31,30,31];
 let NORMALS=[],YR=[],MO=[],DEC=[],SEASONS=[],DAILY={};
 
 // ═══ ASYNC DATA LOADER ═══
-const ARCHIVE_CHUNKS=[
-  ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
-  ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
-  ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
-  ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
-  ['2020-01-01','2024-12-31']
+// Build chunks dynamically up to yesterday
+function buildArchiveChunks(){
+  const yesterday=new Date(Date.now()-86400000);
+  const endDate=yesterday.toISOString().slice(0,10);
+  const endYear=yesterday.getFullYear();
+  const chunks=[
+    ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
+    ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
+    ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
+    ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31']
+  ];
+  // Add remaining years in 5-year chunks up to yesterday
+  for(let y=2020;y<=endYear;y+=5){
+    const s=y+'-01-01';
+    const eYear=Math.min(y+4,endYear);
+    const e=(eYear<endYear)?eYear+'-12-31':endDate;
+    chunks.push([s,e]);
+  }
+  return chunks;
+}
+const ARCHIVE_CHUNKS=buildArchiveChunks()
 ];
 
 function showLoadingOverlay(msg,pct){
@@ -339,7 +354,7 @@ function hideLoadingOverlay(){
 }
 
 async function fetchArchiveData(){
-  const cacheKey='oulusaa_archive_v4';
+  const cacheKey='oulusaa_archive_v5';
   try{
     const cached=localStorage.getItem(cacheKey);
     if(cached){
@@ -552,14 +567,15 @@ async function init(){
     console.error('Data load failed:',e);
     const ol=document.getElementById('dataLoadOverlay');
     if(ol){
-      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v4\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
+      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v5\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
       ol.querySelector('.load-bar').style.display='none';
       ol.querySelector('.load-pct').style.display='none';
     }
   }
 }
 
-const RANGES=[{s:1940,e:2024},{s:1990,e:2024},{s:2000,e:2024},{s:2015,e:2024}];
+const _endYr=new Date().getFullYear();
+const RANGES=[{s:1940,e:_endYr},{s:1990,e:_endYr},{s:2000,e:_endYr},{s:2015,e:_endYr}];
 let currentRange=0, currentView='yearly';
 const charts={};
 
@@ -642,7 +658,7 @@ function renderNormals(){
     <div class="rain">${s.precip} mm/kk</div></div>`).join('');
 
   el.innerHTML=`
-    <div class="panel"><h3>Ilmastonormaalit</h3><p class="sub">Pitkän aikavälin kuukausikeskiarvot (1940–2024)</p>
+    <div class="panel"><h3>Ilmastonormaalit</h3><p class="sub">Pitkän aikavälin kuukausikeskiarvot (1940–tänään)</p>
       <div class="chart-wrap" style="height:400px"><canvas id="cNorm"></canvas></div>
       <div style="overflow-x:auto"><table class="normals-table"><thead><tr>
         <th style="text-align:left">Kuukausi</th><th style="text-align:right">Keskilämpö</th><th style="text-align:right">Ylin</th><th style="text-align:right">Alin</th><th style="text-align:right">Sade</th><th style="text-align:right">Lumi</th>
@@ -851,7 +867,7 @@ function renderHeatmap(){
     </div>
 
     <div class="panel" style="margin-top:28px">
-      <h3>Keskiarvo koko ajalta (1940–2024)</h3>
+      <h3>Keskiarvo koko ajalta (1940–tänään)</h3>
       <p class="sub">Jokaisen päivän keskilämpötila keskiarvona kaikista 85 vuodesta. Näyttää tyypillisen vuoden lämpöprofiilin.</p>
       <div class="heatmap-wrap">${avgHeatmapHTML}</div>
       <div class="hm-legend" style="margin-top:16px">
@@ -1204,7 +1220,7 @@ function fetchLiveWeather(){
         <div class="live-current">
           <div class="big" style="color:${fbDayAvg>=0?'#fb923c':'#38bdf8'}">${fbDayAvg>0?'+':''}${fbDayAvg}°</div>
           <div class="vs">
-            <div>Päivän keskiarvo (85v)</div>
+            <div>Päivän keskiarvo (1940–)</div>
             <div>${monthName}n normaali: <strong>${norm.t>0?'+':''}${norm.t}°</strong></div>
             <div>Keskim. ylin: <strong>${norm.hi>0?'+':''}${norm.hi}°</strong></div>
             <div>Sademäärä: <strong>${norm.p} mm/kk</strong></div>
@@ -1220,7 +1236,7 @@ function fetchLiveWeather(){
     renderLiveWeather(data);
   }).catch(err=>{
     document.getElementById('liveContent').innerHTML=fallbackHTML;
-    document.getElementById('liveUpdated').textContent=curDay+'.'+curMonthNum+'. historiallinen keskiarvo (1940–2024)';
+    document.getElementById('liveUpdated').textContent=curDay+'.'+curMonthNum+'. historiallinen keskiarvo (1940–tänään)';
   });
 }
 
@@ -1322,14 +1338,14 @@ function renderLiveWeather(data){
     </div>
     <div style="margin-top:20px;padding:16px 20px;background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.04);border-radius:14px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
       <div style="font-size:12px;color:#475569;flex:1;min-width:200px">
-        <strong style="color:#94a3b8">Historiallinen vertailu:</strong> Päivän ${curDay}.${curMonthNum}. keskiarvo 1940–2024 on <strong style="color:${dayAvg>=0?'#fb923c':'#38bdf8'}">${dayAvg>0?'+':''}${dayAvg}°C</strong> (${monthName}: ${norm.t>0?'+':''}${norm.t}°C).
+        <strong style="color:#94a3b8">Historiallinen vertailu:</strong> Päivän ${curDay}.${curMonthNum}. keskiarvo 1940–tänään on <strong style="color:${dayAvg>=0?'#fb923c':'#38bdf8'}">${dayAvg>0?'+':''}${dayAvg}°C</strong> (${monthName}: ${norm.t>0?'+':''}${norm.t}°C).
         Nyt on <span class="live-diff ${diffClass}" style="display:inline;padding:2px 8px;font-size:12px">${diffSign}${diff}°</span> päivän normaalista.
       </div>
     </div>
     <div class="record-live-box">
       <div class="record-live-card"><div class="rv" style="color:#fb923c" id="recHi">–</div><div class="rl" id="recHiLbl">Tämän päivän ennätysylin</div></div>
       <div class="record-live-card"><div class="rv" style="color:#38bdf8" id="recLo">–</div><div class="rl" id="recLoLbl">Tämän päivän ennätysalin</div></div>
-      <div class="record-live-card"><div class="rv" style="color:#94a3b8" id="recAvg">–</div><div class="rl">Päivän keskiarvo (85v)</div></div>
+      <div class="record-live-card"><div class="rv" style="color:#94a3b8" id="recAvg">–</div><div class="rl">Päivän keskiarvo (1940–)</div></div>
     </div>
     <div style="margin-top:24px">
       <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Tämän päivän tuntilämpötilat vs. historia</div>
