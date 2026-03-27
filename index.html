@@ -98,6 +98,15 @@
   .hm-year-select button.active{background:linear-gradient(135deg,#1e3a8a,#2563eb);border-color:rgba(59,130,246,0.3);color:#fff;font-weight:700}
   .hm-month-chart{margin-top:28px}
 
+  .compare-selectors{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px;align-items:center}
+  .compare-selectors label{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em}
+  .compare-selectors select{background:rgba(15,23,42,0.8);border:1px solid rgba(148,163,184,0.1);color:#e2e8f0;padding:8px 14px;border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer;min-width:100px}
+  .compare-selectors select:focus{outline:none;border-color:rgba(59,130,246,0.4)}
+  .compare-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px}
+  .compare-stat{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:14px 16px;text-align:center}
+  .compare-stat .cv{font-size:22px;font-weight:800;line-height:1}
+  .compare-stat .cl{font-size:10px;color:#64748b;margin-top:4px}
+
   .live-section{max-width:1100px;margin:0 auto;padding:40px 24px 0}
   .live-panel{background:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));border:1px solid rgba(148,163,184,0.05);border-radius:28px;padding:32px 28px;position:relative;overflow:hidden}
   .live-panel .pulse{position:absolute;top:32px;right:28px;display:flex;align-items:center;gap:8px;font-size:12px;color:#34d399;font-weight:600}
@@ -260,6 +269,7 @@
       <button onclick="switchView('heatmap',this)">Lämpökartta</button>
       <button onclick="switchView('stripes',this)">Ilmastoraidat</button>
       <button onclick="switchView('thismonth',this)">Tämä kuukausi</button>
+      <button onclick="switchView('compare',this)">Vertailu</button>
     </div>
   </div>
 
@@ -270,6 +280,7 @@
   <div id="viewHeatmap" style="display:none"></div>
   <div id="viewStripes" style="display:none"></div>
   <div id="viewThismonth" style="display:none"></div>
+  <div id="viewCompare" style="display:none"></div>
 </div>
 
 <!-- FOOTER -->
@@ -995,6 +1006,137 @@ function renderThismonth(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.parsed.y.toFixed(1)+'°C'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});}
 }
 
+// ═══ YEAR COMPARISON ═══
+let cmpYear1=2024, cmpYear2=1940;
+
+function renderCompare(){
+  const el=document.getElementById('viewCompare');
+  const availYears=YR.map(y=>y.year);
+
+  // Ensure selected years exist
+  if(!availYears.includes(cmpYear1)) cmpYear1=availYears[availYears.length-1];
+  if(!availYears.includes(cmpYear2)) cmpYear2=availYears[0];
+
+  const opts=availYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  el.innerHTML=`
+    <div class="panel">
+      <h3>Vuosivertailu</h3>
+      <p class="sub">Valitse kaksi vuotta ja vertaile päivittäisiä lämpötiloja päällekkäin</p>
+      <div class="compare-selectors">
+        <div>
+          <label>Vuosi 1</label><br>
+          <select id="cmpSel1" onchange="cmpYear1=+this.value;renderCompare()">${opts}</select>
+        </div>
+        <div>
+          <label>Vuosi 2</label><br>
+          <select id="cmpSel2" onchange="cmpYear2=+this.value;renderCompare()">${opts}</select>
+        </div>
+        <button onclick="cmpYear1=cmpYear2;cmpYear2=[cmpYear2,cmpYear1=cmpYear1][0];renderCompare()" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);color:#60a5fa;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;margin-top:16px">⇄ Vaihda</button>
+      </div>
+      <div class="chart-wrap" style="height:400px"><canvas id="cCompare"></canvas></div>
+      <div id="cmpStats"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Kuukausikeskilämpötilat</h3>
+        <p class="sub">Kuukausivertailu kahden vuoden välillä</p>
+        <div class="chart-wrap short"><canvas id="cCompareMonth"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Sademäärä kuukausittain</h3>
+        <p class="sub">mm / kuukausi</p>
+        <div class="chart-wrap short"><canvas id="cComparePrecip"></canvas></div>
+      </div>
+    </div>`;
+
+  // Set selected values
+  document.getElementById('cmpSel1').value=cmpYear1;
+  document.getElementById('cmpSel2').value=cmpYear2;
+
+  const d1=DAILY[cmpYear1], d2=DAILY[cmpYear2];
+  if(!d1||!d2) return;
+
+  // Build daily temperature arrays for the full year
+  function yearDailyTemps(d,year){
+    const temps=[],labels=[];
+    const leap=(year%4===0&&year%100!==0)||year%400===0;
+    for(let m=1;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let day=0;day<md.dim;day++){
+        temps.push(md.days[day]);
+        labels.push((day+1)+'.'+m+'.');
+      }
+    }
+    return {temps,labels};
+  }
+
+  const y1=yearDailyTemps(d1,cmpYear1);
+  const y2=yearDailyTemps(d2,cmpYear2);
+  const maxLen=Math.max(y1.labels.length,y2.labels.length);
+  const labels=(y1.labels.length>=y2.labels.length)?y1.labels:y2.labels;
+
+  // Daily chart
+  const ctx=document.getElementById('cCompare').getContext('2d');
+  destroyChart('cCompare');
+  charts.cCompare=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
+    {label:cmpYear1+'',data:y1.temps,borderColor:'#fb923c',backgroundColor:'rgba(251,146,60,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},
+    {label:cmpYear2+'',data:y2.temps,borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{padding:16,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12,callback:function(v,i){const l=this.getLabelForValue(i);return l.endsWith('1.')?MONTHS_FI[parseInt(l.split('.')[1])-1]:''}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  // Monthly comparison data
+  const m1=MO.filter(m=>m.year===cmpYear1);
+  const m2=MO.filter(m=>m.year===cmpYear2);
+  const monthLabels=MONTHS_FI;
+
+  const m1temps=monthLabels.map((_,i)=>{const mo=m1.find(m=>m.month===i+1);return mo?mo.temp:null;});
+  const m2temps=monthLabels.map((_,i)=>{const mo=m2.find(m=>m.month===i+1);return mo?mo.temp:null;});
+  const m1precip=monthLabels.map((_,i)=>{const mo=m1.find(m=>m.month===i+1);return mo?mo.precip:null;});
+  const m2precip=monthLabels.map((_,i)=>{const mo=m2.find(m=>m.month===i+1);return mo?mo.precip:null;});
+
+  // Monthly temp chart
+  const ctx2=document.getElementById('cCompareMonth').getContext('2d');
+  destroyChart('cCompareMonth');
+  charts.cCompareMonth=new Chart(ctx2,{type:'line',data:{labels:monthLabels,datasets:[
+    {label:cmpYear1+'',data:m1temps,borderColor:'#fb923c',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#fb923c',pointBorderWidth:2.5,pointRadius:5,borderWidth:2.5,tension:0.3},
+    {label:cmpYear2+'',data:m2temps,borderColor:'#38bdf8',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#38bdf8',pointBorderWidth:2.5,pointRadius:5,borderWidth:2.5,tension:0.3}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–')}}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  // Monthly precip chart
+  const ctx3=document.getElementById('cComparePrecip').getContext('2d');
+  destroyChart('cComparePrecip');
+  charts.cComparePrecip=new Chart(ctx3,{type:'bar',data:{labels:monthLabels,datasets:[
+    {label:cmpYear1+'',data:m1precip,backgroundColor:'rgba(251,146,60,0.5)',borderRadius:4,borderSkipped:false},
+    {label:cmpYear2+'',data:m2precip,backgroundColor:'rgba(56,189,248,0.5)',borderRadius:4,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'mm'}}}}});
+
+  // Stats comparison
+  const yr1=YR.find(y=>y.year===cmpYear1);
+  const yr2=YR.find(y=>y.year===cmpYear2);
+  if(yr1&&yr2){
+    const tDiff=(yr1.temp-yr2.temp).toFixed(1);
+    const pDiff=yr1.precip-yr2.precip;
+    // Find daily min/max for each year
+    const minMax=(d)=>{let mn=999,mx=-999;for(let m=1;m<=12;m++){if(d[m])d[m].days.forEach(t=>{if(t!=null){if(t<mn)mn=t;if(t>mx)mx=t;}});}return{min:mn,max:mx};};
+    const mm1=minMax(d1),mm2=minMax(d2);
+
+    document.getElementById('cmpStats').innerHTML=`
+      <div class="compare-stat-grid">
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${yr1.temp>0?'+':''}${yr1.temp}°</div><div class="cl">${cmpYear1} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${yr2.temp>0?'+':''}${yr2.temp}°</div><div class="cl">${cmpYear2} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${tDiff>0?'#f87171':'#34d399'}">${tDiff>0?'+':''}${tDiff}°</div><div class="cl">Ero keskilämpö</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">+${mm1.max.toFixed(1)}°</div><div class="cl">${cmpYear1} lämpimin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">+${mm2.max.toFixed(1)}°</div><div class="cl">${cmpYear2} lämpimin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${mm1.min.toFixed(1)}°</div><div class="cl">${cmpYear1} kylmin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${mm2.min.toFixed(1)}°</div><div class="cl">${cmpYear2} kylmin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${yr1.precip}mm</div><div class="cl">${cmpYear1} sade</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${yr2.precip}mm</div><div class="cl">${cmpYear2} sade</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${pDiff>0?'#34d399':'#fb923c'}">${pDiff>0?'+':''}${pDiff}mm</div><div class="cl">Ero sademäärä</div></div>
+      </div>`;
+  }
+}
+
 // ═══ MAIN CONTROLLERS ═══
 function setRange(i,btn){
   currentRange=i;
@@ -1007,18 +1149,18 @@ function setRange(i,btn){
 
 function switchView(v,btn){
   currentView=v;
-  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth'].forEach(id=>{document.getElementById(id).style.display='none';});
+  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth','viewCompare'].forEach(id=>{document.getElementById(id).style.display='none';});
   document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).style.display='block';
   document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
+  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6,compare:7}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
   Object.keys(charts).forEach(destroyChart);
   renderCurrentView();
   document.getElementById('charts').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderCurrentView(){
-  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth})[currentView]();
+  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth,compare:renderCompare})[currentView]();
 }
 
 // Init
