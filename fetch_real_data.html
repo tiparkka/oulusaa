@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>OuluSää — Hae oikea säädata</title>
+<style>
+  body{font-family:system-ui;background:#060a13;color:#e2e8f0;padding:40px;max-width:800px;margin:0 auto}
+  h1{font-size:24px;margin-bottom:8px}
+  p{color:#94a3b8;font-size:14px;line-height:1.6}
+  .progress{margin:24px 0;padding:20px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:12px}
+  .bar-wrap{height:20px;background:rgba(148,163,184,0.1);border-radius:10px;overflow:hidden;margin:12px 0}
+  .bar{height:100%;background:linear-gradient(90deg,#1e40af,#3b82f6);border-radius:10px;transition:width 0.3s;width:0%}
+  button{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
+  button:disabled{opacity:0.5;cursor:not-allowed}
+  .log{margin-top:16px;font-family:monospace;font-size:12px;color:#64748b;max-height:200px;overflow-y:auto}
+  .log div{padding:2px 0}
+  .success{color:#34d399} .error{color:#f43f5e}
+</style>
+</head>
+<body>
+<h1>OuluSää — Hae oikea säädata</h1>
+<p>Tämä työkalu hakee oikean päivittäisen säädatan Open-Meteo Archive API:sta Oululle (65.01°N, 25.47°E) vuosilta 1940–2024.
+Data haetaan 10 vuoden chunkeissa. Lopputulos on weather_data.json tiedosto joka voidaan upottaa index.html:ään.</p>
+
+<button onclick="startFetch()" id="btn">Aloita datan haku</button>
+
+<div class="progress">
+  <div id="status">Valmis aloittamaan</div>
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <div id="stats"></div>
+</div>
+<div class="log" id="log"></div>
+
+<script>
+const LAT=65.0121, LON=25.4651;
+const MONTHS_FI=["Tammi","Helmi","Maalis","Huhti","Touko","Kesä","Heinä","Elo","Syys","Loka","Marras","Joulu"];
+const CHUNKS=[
+  ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
+  ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
+  ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
+  ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
+  ['2020-01-01','2024-12-31'],
+];
+
+function log(msg,cls){const d=document.createElement('div');d.textContent=msg;if(cls)d.className=cls;document.getElementById('log').appendChild(d);}
+
+async function fetchChunk(start,end){
+  const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&start_date=${start}&end_date=${end}&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&timezone=Europe%2FHelsinki`;
+  for(let attempt=0;attempt<4;attempt++){
+    try{
+      const r=await fetch(url);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){
+      log(`  Yritys ${attempt+1} epäonnistui: ${e.message}`,'error');
+      if(attempt<3) await new Promise(r=>setTimeout(r,Math.pow(2,attempt+1)*1000));
+      else throw e;
+    }
+  }
+}
+
+async function startFetch(){
+  document.getElementById('btn').disabled=true;
+  const allDays=[];
+  for(let i=0;i<CHUNKS.length;i++){
+    const [s,e]=CHUNKS[i];
+    document.getElementById('status').textContent=`Haetaan ${s} — ${e}...`;
+    document.getElementById('bar').style.width=((i/CHUNKS.length)*100)+'%';
+    log(`Haetaan ${s} — ${e}...`);
+    try{
+      const data=await fetchChunk(s,e);
+      const daily=data.daily;
+      for(let j=0;j<daily.time.length;j++){
+        allDays.push({date:daily.time[j],mean:daily.temperature_2m_mean[j],max:daily.temperature_2m_max[j],min:daily.temperature_2m_min[j],precip:daily.precipitation_sum[j],snow:daily.snowfall_sum[j]});
+      }
+      log(`  ${daily.time.length} päivää haettu`,'success');
+    }catch(e){
+      log(`  VIRHE: ${e.message}`,'error');
+      document.getElementById('btn').disabled=false;
+      return;
+    }
+    // Small delay between chunks
+    if(i<CHUNKS.length-1) await new Promise(r=>setTimeout(r,1000));
+  }
+
+  document.getElementById('bar').style.width='90%';
+  document.getElementById('status').textContent='Prosessoidaan dataa...';
+  log('Prosessoidaan '+allDays.length+' päivää...');
+
+  // Process into data structures
+  const DAILY={};
+  for(const day of allDays){
+    const [y,m,d]=day.date.split('-').map(Number);
+    if(!DAILY[y])DAILY[y]={};
+    if(!DAILY[y][m])DAILY[y][m]={days:[],max:[],min:[],precip:[],snow:[],dim:0};
+    DAILY[y][m].days.push(day.mean!=null?+day.mean.toFixed(1):null);
+    DAILY[y][m].max.push(day.max!=null?+day.max.toFixed(1):null);
+    DAILY[y][m].min.push(day.min!=null?+day.min.toFixed(1):null);
+    DAILY[y][m].precip.push(day.precip!=null?+day.precip.toFixed(1):null);
+    DAILY[y][m].snow.push(day.snow!=null?+day.snow.toFixed(1):null);
+    DAILY[y][m].dim=DAILY[y][m].days.length;
+  }
+
+  const YR=[];
+  for(let y=1940;y<=2024;y++){
+    if(!DAILY[y])continue;
+    let ts=0,tc=0,ps=0,ss=0;
+    for(let m=1;m<=12;m++){if(!DAILY[y][m])continue;DAILY[y][m].days.forEach(t=>{if(t!=null){ts+=t;tc++;}});DAILY[y][m].precip.forEach(p=>{if(p!=null)ps+=p;});DAILY[y][m].snow.forEach(s=>{if(s!=null)ss+=s;});}
+    YR.push({year:y,temp:tc?+(ts/tc).toFixed(1):null,precip:+ps.toFixed(0),snow:+ss.toFixed(0)});
+  }
+
+  const MO=[];
+  for(let y=1940;y<=2024;y++){
+    if(!DAILY[y])continue;
+    for(let m=1;m<=12;m++){
+      if(!DAILY[y][m])continue;
+      const md=DAILY[y][m];
+      const vt=md.days.filter(t=>t!=null);
+      MO.push({label:MONTHS_FI[m-1]+' '+y,short:m+'/'+String(y).slice(2),year:y,month:m,
+        temp:vt.length?+(vt.reduce((a,b)=>a+b,0)/vt.length).toFixed(1):null,
+        precip:+(md.precip.filter(p=>p!=null).reduce((a,b)=>a+b,0)).toFixed(1),
+        snow:+(md.snow.filter(s=>s!=null).reduce((a,b)=>a+b,0)).toFixed(1)});
+    }
+  }
+
+  const NORMALS=[];
+  for(let m=1;m<=12;m++){
+    const ts=[],mx=[],mn=[],ps=[],ss=[];
+    for(let y=1940;y<=2024;y++){
+      if(!DAILY[y]||!DAILY[y][m])continue;
+      const md=DAILY[y][m];
+      const vt=md.days.filter(t=>t!=null);const vmx=md.max.filter(t=>t!=null);const vmn=md.min.filter(t=>t!=null);
+      if(vt.length)ts.push(vt.reduce((a,b)=>a+b,0)/vt.length);
+      if(vmx.length)mx.push(vmx.reduce((a,b)=>a+b,0)/vmx.length);
+      if(vmn.length)mn.push(vmn.reduce((a,b)=>a+b,0)/vmn.length);
+      ps.push(md.precip.filter(p=>p!=null).reduce((a,b)=>a+b,0));
+      ss.push(md.snow.filter(s=>s!=null).reduce((a,b)=>a+b,0));
+    }
+    NORMALS.push({m:MONTHS_FI[m-1],
+      t:+(ts.reduce((a,b)=>a+b,0)/ts.length).toFixed(1),
+      hi:+(mx.reduce((a,b)=>a+b,0)/mx.length).toFixed(1),
+      lo:+(mn.reduce((a,b)=>a+b,0)/mn.length).toFixed(1),
+      p:+(ps.reduce((a,b)=>a+b,0)/ps.length).toFixed(0),
+      s:+(ss.reduce((a,b)=>a+b,0)/ss.length).toFixed(0)});
+  }
+
+  // Compact DAILY
+  const DC={};
+  for(const y of Object.keys(DAILY)){
+    DC[y]={};
+    for(const m of Object.keys(DAILY[y])){
+      DC[y][m]={days:DAILY[y][m].days,max:DAILY[y][m].max,min:DAILY[y][m].min,dim:DAILY[y][m].dim};
+    }
+  }
+
+  const output={YR,MO,NORMALS,DAILY:DC};
+  const json=JSON.stringify(output);
+
+  document.getElementById('bar').style.width='100%';
+  document.getElementById('status').textContent='Valmis!';
+  document.getElementById('stats').innerHTML=`
+    <b>${YR.length}</b> vuotta, <b>${MO.length}</b> kuukautta, <b>${allDays.length}</b> päivää<br>
+    JSON-koko: <b>${(json.length/1024/1024).toFixed(1)} MB</b>
+  `;
+  log('Data prosessoitu onnistuneesti!','success');
+  log('2024: '+YR.find(y=>y.year===2024)?.temp+'°C','success');
+
+  // Download
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='weather_data.json';a.textContent='Lataa weather_data.json';
+  a.style.cssText='display:inline-block;margin-top:16px;padding:12px 24px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-weight:700';
+  document.getElementById('log').after(a);
+}
+</script>
+</body>
+</html>
