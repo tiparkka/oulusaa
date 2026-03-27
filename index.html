@@ -351,16 +351,25 @@ async function fetchArchiveData(){
 
     const url='https://archive-api.open-meteo.com/v1/archive?latitude=65.0121&longitude=25.4651&start_date='+start+'&end_date='+end+'&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&timezone=Europe%2FHelsinki';
 
+    // Rate limit: wait between chunks (Open-Meteo free tier)
+    if(i>0) await new Promise(r=>setTimeout(r,1500));
+
     let json=null;
-    for(let retry=0;retry<4;retry++){
+    for(let retry=0;retry<5;retry++){
       try{
         const resp=await fetch(url);
+        if(resp.status===429){
+          const wait=Math.min(30000,2000*Math.pow(2,retry));
+          showLoadingOverlay('Rate limit — odotetaan '+Math.round(wait/1000)+'s...',pct);
+          await new Promise(r=>setTimeout(r,wait));
+          continue;
+        }
         if(!resp.ok)throw new Error('HTTP '+resp.status);
         json=await resp.json();
         break;
       }catch(e){
-        if(retry===3)throw new Error('API-haku epäonnistui chunk '+(i+1)+': '+e.message);
-        await new Promise(r=>setTimeout(r,1000*(retry+1)));
+        if(retry===4)throw new Error('API-haku epäonnistui chunk '+(i+1)+': '+e.message);
+        await new Promise(r=>setTimeout(r,2000*(retry+1)));
       }
     }
 
