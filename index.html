@@ -270,6 +270,7 @@
       <button onclick="switchView('stripes',this)">Ilmastoraidat</button>
       <button onclick="switchView('thismonth',this)">Tämä kuukausi</button>
       <button onclick="switchView('compare',this)">Vertailu</button>
+      <button onclick="switchView('extremes',this)">Ääripäivät</button>
     </div>
   </div>
 
@@ -281,6 +282,7 @@
   <div id="viewStripes" style="display:none"></div>
   <div id="viewThismonth" style="display:none"></div>
   <div id="viewCompare" style="display:none"></div>
+  <div id="viewExtremes" style="display:none"></div>
 </div>
 
 <!-- FOOTER -->
@@ -1143,6 +1145,114 @@ function renderCompare(){
   }
 }
 
+// ═══ EXTREME DAYS ═══
+function renderExtremes(){
+  const el=document.getElementById('viewExtremes');
+  const {s,e}=RANGES[currentRange];
+
+  // Count extreme days per year
+  const frostDays=[];   // daily min < 0
+  const coldDays=[];    // daily mean < -20
+  const hotDays=[];     // daily max > +25
+  const tropDays=[];    // daily max > +30
+  const iceDays=[];     // daily max < 0
+
+  const years=YR.filter(y=>y.year>=s&&y.year<=e);
+
+  years.forEach(yr=>{
+    const y=yr.year;
+    const d=DAILY[y];
+    if(!d){frostDays.push(0);coldDays.push(0);hotDays.push(0);tropDays.push(0);iceDays.push(0);return;}
+    let frost=0,cold=0,hot=0,trop=0,ice=0;
+    for(let m=1;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let i=0;i<md.dim;i++){
+        const mean=md.days[i];
+        const mx=md.max&&md.max[i]!=null?md.max[i]:mean;
+        const mn=md.min&&md.min[i]!=null?md.min[i]:mean;
+        if(mn!=null&&mn<0)frost++;
+        if(mean!=null&&mean<-20)cold++;
+        if(mx!=null&&mx>25)hot++;
+        if(mx!=null&&mx>30)trop++;
+        if(mx!=null&&mx<0)ice++;
+      }
+    }
+    frostDays.push(frost);coldDays.push(cold);hotDays.push(hot);tropDays.push(trop);iceDays.push(ice);
+  });
+
+  const labels=years.map(y=>y.year);
+
+  // Stats
+  const avg=(arr)=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):0;
+  const trend=(arr)=>{
+    if(arr.length<10)return 0;
+    const f5=arr.slice(0,5),l5=arr.slice(-5);
+    return((l5.reduce((a,b)=>a+b,0)/5)-(f5.reduce((a,b)=>a+b,0)/5)).toFixed(1);
+  };
+  const hotTrend=trend(hotDays);
+  const coldTrend=trend(coldDays);
+  const iceTrend=trend(iceDays);
+
+  el.innerHTML=`
+    <div class="panel">
+      <h3>Hellepäivät (ylin > +25°C)</h3>
+      <p class="sub">Päivät joina ylin lämpötila ylitti +25°C — ${s}–${e}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${avg(hotDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${Math.max(...hotDays)}</div><div class="cl">Eniten (${labels[hotDays.indexOf(Math.max(...hotDays))]})</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${hotTrend>0?'#f87171':'#34d399'}">${hotTrend>0?'+':''}${hotTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cHotDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Trooppiset päivät (ylin > +30°C)</h3>
+      <p class="sub">Harvinaisia Oulussa — kuinka monta per vuosi?</p>
+      <div class="chart-wrap short"><canvas id="cTropDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Kovien pakkasten päivät (keskilämpö < -20°C)</h3>
+      <p class="sub">Päivät joina vuorokauden keskilämpötila alitti -20°C</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${avg(coldDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${Math.max(...coldDays)}</div><div class="cl">Eniten (${labels[coldDays.indexOf(Math.max(...coldDays))]})</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${coldTrend<0?'#34d399':'#f87171'}">${coldTrend>0?'+':''}${coldTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cColdDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Jääpäivät (ylin < 0°C)</h3>
+      <p class="sub">Päivät joina lämpötila ei noussut plussan puolelle</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#818cf8">${avg(iceDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${iceTrend<0?'#34d399':'#f87171'}">${iceTrend>0?'+':''}${iceTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cIceDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Pakkaspäivät (alin < 0°C)</h3>
+      <p class="sub">Päivät joina alin lämpötila laski alle nollan</p>
+      <div class="chart-wrap short"><canvas id="cFrostDays"></canvas></div>
+    </div>`;
+
+  function makeBarChart(id,data,label,color,colorAlpha){
+    const ctx=document.getElementById(id).getContext('2d');
+    destroyChart(id);
+    // Moving average (10 year)
+    const ma=data.map((v,i)=>{const w=Math.min(10,i+1);const sl=data.slice(Math.max(0,i-w+1),i+1);return+(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1);});
+    charts[id]=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+      {type:'bar',label:label,data:data,backgroundColor:colorAlpha,borderRadius:3,borderSkipped:false,order:2},
+      {type:'line',label:'10v liukuva ka.',data:ma,borderColor:color,borderWidth:2.5,pointRadius:0,tension:0.4,order:1}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},beginAtZero:true,ticks:{callback:v=>v+' pv'}}}}});
+  }
+
+  makeBarChart('cHotDays',hotDays,'Hellepäivät (>+25°C)','#fb923c','rgba(251,146,60,0.4)');
+  makeBarChart('cTropDays',tropDays,'Trooppiset (>+30°C)','#ef4444','rgba(239,68,68,0.4)');
+  makeBarChart('cColdDays',coldDays,'Kova pakkanen (<-20°C)','#38bdf8','rgba(56,189,248,0.4)');
+  makeBarChart('cIceDays',iceDays,'Jääpäivät (max <0°C)','#818cf8','rgba(129,140,248,0.4)');
+  makeBarChart('cFrostDays',frostDays,'Pakkaspäivät (min <0°C)','#a5b4fc','rgba(165,180,252,0.3)');
+}
+
 // ═══ MAIN CONTROLLERS ═══
 function setRange(i,btn){
   currentRange=i;
@@ -1155,18 +1265,18 @@ function setRange(i,btn){
 
 function switchView(v,btn){
   currentView=v;
-  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth','viewCompare'].forEach(id=>{document.getElementById(id).style.display='none';});
+  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth','viewCompare','viewExtremes'].forEach(id=>{document.getElementById(id).style.display='none';});
   document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).style.display='block';
   document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6,compare:7}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
+  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6,compare:7,extremes:8}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
   Object.keys(charts).forEach(destroyChart);
   renderCurrentView();
   document.getElementById('charts').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderCurrentView(){
-  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth,compare:renderCompare})[currentView]();
+  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth,compare:renderCompare,extremes:renderExtremes})[currentView]();
 }
 
 // Init
