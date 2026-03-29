@@ -476,16 +476,14 @@ const DAYS_IN_MONTH=[31,29,31,30,31,30,31,31,30,31,30,31];
 let NORMALS=[],YR=[],MO=[],DEC=[],SEASONS=[],DAILY={};
 
 // ═══ ASYNC DATA LOADER ═══
-// Build chunks dynamically up to yesterday (max 10y per chunk)
+// Archive API for historical data, Forecast API for recent data
 function buildArchiveChunks(){
-  const yesterday=new Date(Date.now()-86400000);
-  const endDate=yesterday.toISOString().slice(0,10);
   return [
     ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
     ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
     ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
     ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
-    ['2020-01-01',endDate]
+    ['2020-01-01','2024-12-31']
   ];
 }
 const ARCHIVE_CHUNKS=buildArchiveChunks();
@@ -504,12 +502,12 @@ function hideLoadingOverlay(){
 }
 
 async function fetchArchiveData(){
-  const cacheKey='oulusaa_archive_v6';
+  const cacheKey='oulusaa_archive_v7';
   try{
     const cached=localStorage.getItem(cacheKey);
     if(cached){
       const p=JSON.parse(cached);
-      if(p.v===4&&p.ts>Date.now()-30*24*3600000){
+      if(p.v===7&&p.ts>Date.now()-7*24*3600000){
         showLoadingOverlay('Ladataan välimuistista...',90);
         return p.data;
       }
@@ -543,14 +541,14 @@ async function fetchArchiveData(){
     }
   }
 
-  // Launch all chunks with 400ms stagger — parallel but gentle
+  // Launch all archive chunks with 400ms stagger — parallel but gentle
   const results=await Promise.all(
     ARCHIVE_CHUNKS.map(([s,e],i)=>
       new Promise(r=>setTimeout(r,i*400)).then(()=>fetchChunk(s,e,i))
     )
   );
 
-  // Merge results in order
+  // Merge archive results in order
   const allTime=[],allMean=[],allMax=[],allMin=[],allPrecip=[],allSnow=[];
   results.forEach(json=>{
     const d=json.daily;
@@ -562,12 +560,39 @@ async function fetchArchiveData(){
     allSnow.push(...(d.snowfall_sum||[]));
   });
 
+  // Fetch recent data (2025+) from Forecast API (has last ~18 months)
+  showLoadingOverlay('Haetaan tuoreinta dataa (2025–)...',92);
+  try{
+    const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const recentUrl='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&start_date=2025-01-01&end_date='+yesterday+'&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&timezone=Europe%2FHelsinki';
+    const recentResp=await fetch(recentUrl);
+    if(recentResp.ok){
+      const recentJson=await recentResp.json();
+      const rd=recentJson.daily;
+      if(rd&&rd.time&&rd.time.length>0){
+        // Only add dates not already in archive data
+        const lastArchiveDate=allTime[allTime.length-1];
+        rd.time.forEach((t,i)=>{
+          if(t>lastArchiveDate){
+            allTime.push(t);
+            allMean.push(rd.temperature_2m_mean?rd.temperature_2m_mean[i]:null);
+            allMax.push(rd.temperature_2m_max?rd.temperature_2m_max[i]:null);
+            allMin.push(rd.temperature_2m_min?rd.temperature_2m_min[i]:null);
+            allPrecip.push(rd.precipitation_sum?rd.precipitation_sum[i]:null);
+            allSnow.push(rd.snowfall_sum?rd.snowfall_sum[i]:null);
+          }
+        });
+        console.log('Recent data: added '+(allTime.length-results.reduce((a,r)=>a+r.daily.time.length,0))+' days from forecast API');
+      }
+    }
+  }catch(e){console.warn('Recent data fetch failed (non-critical):',e);}
+
   showLoadingOverlay('Tallennetaan välimuistiin...',95);
 
   const data={time:allTime,mean:allMean,max:allMax,min:allMin,precip:allPrecip,snow:allSnow};
 
   try{
-    localStorage.setItem(cacheKey,JSON.stringify({v:4,ts:Date.now(),data:data}));
+    localStorage.setItem(cacheKey,JSON.stringify({v:7,ts:Date.now(),data:data}));
   }catch(e){console.warn('Cache write failed:',e);}
 
   return data;
@@ -716,7 +741,7 @@ async function init(){
     console.error('Data load failed:',e);
     const ol=document.getElementById('dataLoadOverlay');
     if(ol){
-      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v6\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
+      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v7\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
       ol.querySelector('.load-bar').style.display='none';
       ol.querySelector('.load-pct').style.display='none';
     }
