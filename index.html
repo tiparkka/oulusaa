@@ -539,12 +539,13 @@ async function fetchArchiveData(){
         await new Promise(r=>setTimeout(r,2000*(retry+1)));
       }
     }
+    throw new Error('API-haku epäonnistui '+start.slice(0,4)+'–'+end.slice(0,4)+': liian monta 429-vastausta');
   }
 
-  // Launch all archive chunks with 400ms stagger — parallel but gentle
+  // Launch all archive chunks with 600ms stagger — parallel but gentle
   const results=await Promise.all(
     ARCHIVE_CHUNKS.map(([s,e],i)=>
-      new Promise(r=>setTimeout(r,i*400)).then(()=>fetchChunk(s,e,i))
+      new Promise(r=>setTimeout(r,i*600)).then(()=>fetchChunk(s,e,i))
     )
   );
 
