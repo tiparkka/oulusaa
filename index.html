@@ -3,176 +3,325 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OuluSää — Historiallinen säädata 1940–2024</title>
+<title>OuluSää — Historiallinen säädata 1940–tänään</title>
 <meta name="description" content="Oulun historiallinen säädata vuodesta 1940. Lämpötilat, sademäärät ja lumisade interaktiivisina kaavioina. Data: ECMWF ERA5.">
 <meta name="theme-color" content="#060a13">
-<meta property="og:title" content="OuluSää — Historiallinen säädata 1940–2024">
-<meta property="og:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina. Lämpötilat, sademäärät, lumisade ja ilmastonmuutos.">
+<meta property="og:title" content="OuluSää — Historiallinen säädata 1940–tänään">
+<meta property="og:description" content="Yli 85 vuotta Oulun säätä interaktiivisina kaavioina. Lämpötilat, sademäärät, lumisade ja ilmastonmuutos.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fi_FI">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="OuluSää — Historiallinen säädata 1940–2024">
-<meta name="twitter:description" content="85 vuotta Oulun säätä interaktiivisina kaavioina.">
+<meta name="twitter:title" content="OuluSää — Historiallinen säädata 1940–tänään">
+<meta name="twitter:description" content="Yli 85 vuotta Oulun säätä interaktiivisina kaavioina.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
+  :root{
+    --bg:#060a13;--bg2:#0a0f1a;--bg3:rgba(15,23,42,0.5);--bg4:rgba(15,23,42,0.65);--bg5:rgba(8,12,24,0.8);
+    --text:#e2e8f0;--text2:#f1f5f9;--text3:#94a3b8;--text4:#64748b;--text5:#475569;--text6:#334155;
+    --border:rgba(148,163,184,0.06);--border2:rgba(148,163,184,0.05);--border3:rgba(148,163,184,0.04);
+    --nav-bg:rgba(6,10,19,0.88);--hero-grad:linear-gradient(170deg,rgba(30,58,138,0.25) 0%,rgba(6,10,19,0.95) 55%);
+    --panel-bg:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));
+    --card-bg:rgba(15,23,42,0.5);--card-bg2:rgba(15,23,42,0.6);
+    --tooltip-bg:rgba(8,12,24,0.95);--tooltip-border:rgba(100,150,220,0.15);
+    --chart-grid:rgba(148,163,184,0.04);--chart-point:#060a13;
+    --footer-bg:rgba(6,10,19,0.95);--footer-border:rgba(148,163,184,0.05);
+    --scrollbar-track:#0a0f1a;--scrollbar-thumb:#1e293b;
+    --heatmap-sticky:#060a13;--overlay-bg:#060a13;
+    --btn-bg:rgba(15,23,42,0.5);--btn-border:rgba(148,163,184,0.06);
+    --viewbtn-bg:rgba(15,23,42,0.4);--viewbtn-border:rgba(148,163,184,0.04);
+    --select-bg:rgba(15,23,42,0.8);--select-border:rgba(148,163,184,0.1);
+    --badge-bg:rgba(59,130,246,0.08);--badge-border:rgba(59,130,246,0.15);
+    --shadow-hover:rgba(0,0,0,0.5)
+  }
+  [data-theme="light"]{
+    --bg:#f8fafc;--bg2:#f1f5f9;--bg3:rgba(226,232,240,0.5);--bg4:rgba(241,245,249,0.9);--bg5:rgba(248,250,252,0.95);
+    --text:#1e293b;--text2:#0f172a;--text3:#475569;--text4:#64748b;--text5:#94a3b8;--text6:#cbd5e1;
+    --border:rgba(51,65,85,0.1);--border2:rgba(51,65,85,0.08);--border3:rgba(51,65,85,0.06);
+    --nav-bg:rgba(248,250,252,0.9);--hero-grad:linear-gradient(170deg,rgba(191,219,254,0.4) 0%,rgba(248,250,252,0.98) 55%);
+    --panel-bg:linear-gradient(160deg,rgba(241,245,249,0.9),rgba(248,250,252,0.95));
+    --card-bg:rgba(226,232,240,0.4);--card-bg2:rgba(226,232,240,0.5);
+    --tooltip-bg:rgba(15,23,42,0.9);--tooltip-border:rgba(100,150,220,0.2);
+    --chart-grid:rgba(51,65,85,0.08);--chart-point:#f8fafc;
+    --footer-bg:rgba(241,245,249,0.98);--footer-border:rgba(51,65,85,0.08);
+    --scrollbar-track:#f1f5f9;--scrollbar-thumb:#cbd5e1;
+    --heatmap-sticky:#f8fafc;--overlay-bg:#f8fafc;
+    --btn-bg:rgba(226,232,240,0.6);--btn-border:rgba(51,65,85,0.1);
+    --viewbtn-bg:rgba(226,232,240,0.5);--viewbtn-border:rgba(51,65,85,0.08);
+    --select-bg:rgba(241,245,249,0.9);--select-border:rgba(51,65,85,0.15);
+    --badge-bg:rgba(59,130,246,0.1);--badge-border:rgba(59,130,246,0.2);
+    --shadow-hover:rgba(0,0,0,0.15)
+  }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#060a13;color:#e2e8f0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
-  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#0a0f1a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--scrollbar-track)}::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:4px}
   @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
   @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}}
   @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
 
-  nav{position:sticky;top:0;z-index:100;background:rgba(6,10,19,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(148,163,184,0.06);padding:0 24px}
+  nav{position:sticky;top:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 24px;transition:background 0.3s}
   .nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:60px;justify-content:space-between}
   .nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
   .nav-logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;box-shadow:0 2px 14px rgba(59,130,246,0.3)}
   .nav-links{display:flex;gap:2px}
-  .nav-links button{background:transparent;border:none;color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s}
-  .nav-links button:hover{color:#e2e8f0;background:rgba(148,163,184,0.06)}
+  .nav-links button{background:transparent;border:none;color:var(--text3);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s}
+  .nav-links button:hover{color:var(--text);background:var(--card-bg)}
+  .theme-toggle{background:var(--card-bg);border:1px solid var(--border);color:var(--text3);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+  .theme-toggle:hover{color:var(--text);border-color:var(--border2)}
 
-  .hero{position:relative;overflow:hidden;padding:90px 24px 80px;background:linear-gradient(170deg,rgba(30,58,138,0.25) 0%,rgba(6,10,19,0.95) 55%)}
+  .hero{position:relative;overflow:hidden;padding:90px 24px 80px;background:var(--hero-grad);transition:background 0.3s}
   .hero .blob1{position:absolute;top:-120px;right:-80px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(56,189,248,0.07) 0%,transparent 70%);border-radius:50%;animation:float1 8s ease-in-out infinite}
   .hero .blob2{position:absolute;top:40px;left:-100px;width:400px;height:400px;background:radial-gradient(ellipse,rgba(139,92,246,0.05) 0%,transparent 70%);border-radius:50%;animation:float2 10s ease-in-out infinite}
   .hero-inner{position:relative;max-width:1100px;margin:0 auto}
-  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:99px;padding:7px 18px;margin-bottom:24px;animation:fadeUp 0.8s ease-out both}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--badge-bg);border:1px solid var(--badge-border);border-radius:99px;padding:7px 18px;margin-bottom:24px;animation:fadeUp 0.8s ease-out both}
   .hero-badge-dot{width:7px;height:7px;border-radius:50%;background:#3b82f6;box-shadow:0 0 10px #3b82f6}
   .hero h1{font-size:clamp(40px,7vw,72px);font-weight:900;letter-spacing:-0.045em;line-height:1.05;animation:fadeUp 0.8s ease-out 0.1s both}
-  .hero h1 .main{background:linear-gradient(135deg,#f1f5f9 20%,#60a5fa 60%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .hero h1 .sub{display:block;background:linear-gradient(135deg,#94a3b8,#64748b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:clamp(22px,3.5vw,42px);font-weight:600;margin-top:4px}
-  .hero p.desc{max-width:580px;color:#64748b;font-size:16px;line-height:1.7;margin:28px 0 48px;animation:fadeUp 0.8s ease-out 0.2s both}
+  .hero h1 .main{background:linear-gradient(135deg,var(--text2) 20%,#60a5fa 60%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero h1 .sub{display:block;background:linear-gradient(135deg,var(--text3),var(--text4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:clamp(22px,3.5vw,42px);font-weight:600;margin-top:4px}
+  .hero p.desc{max-width:580px;color:var(--text4);font-size:16px;line-height:1.7;margin:28px 0 48px;animation:fadeUp 0.8s ease-out 0.2s both}
 
   .hero-stats{display:flex;flex-wrap:wrap;gap:18px;animation:fadeUp 0.8s ease-out 0.35s both}
-  .hero-stat{flex:1 1 150px;min-width:150px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:22px;padding:28px 24px}
+  .hero-stat{flex:1 1 150px;min-width:150px;background:var(--card-bg);border:1px solid var(--border);border-radius:22px;padding:28px 24px;transition:background 0.3s}
   .hero-stat .val{font-size:34px;font-weight:800;letter-spacing:-0.03em;line-height:1}
-  .hero-stat .lbl{font-size:12px;color:#64748b;margin-top:10px}
+  .hero-stat .lbl{font-size:12px;color:var(--text4);margin-top:10px}
 
   .content{max-width:1100px;margin:0 auto;padding:0 24px 100px}
 
   .controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin:56px 0 36px;scroll-margin-top:76px}
   .range-btns,.view-btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  .range-btns .label{font-size:11px;color:#475569;font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:0.08em}
+  .range-btns .label{font-size:11px;color:var(--text5);font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:0.08em}
   .range-btns button,.view-btns button{border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:13px;transition:all 0.3s;font-family:inherit}
-  .range-btns button{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);color:#94a3b8;font-weight:400}
+  .range-btns button{background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--text3);font-weight:400}
   .range-btns button.active{background:linear-gradient(135deg,#1e3a8a,#2563eb);border-color:rgba(59,130,246,0.3);color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(37,99,235,0.2)}
-  .view-btns{background:rgba(15,23,42,0.4);border-radius:12px;padding:5px;border:1px solid rgba(148,163,184,0.04)}
-  .view-btns button{background:transparent;color:#64748b;font-weight:500;padding:9px 18px;border-radius:8px}
+  .view-btns{background:var(--viewbtn-bg);border-radius:12px;padding:5px;border:1px solid var(--viewbtn-border)}
+  .view-btns button{background:transparent;color:var(--text4);font-weight:500;padding:9px 18px;border-radius:8px}
   .view-btns button.active{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(59,130,246,0.2)}
 
-  .panel{background:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));border:1px solid rgba(148,163,184,0.05);border-radius:28px;padding:32px 24px;margin-bottom:28px}
-  .panel h3{font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
-  .panel .sub{font-size:12px;color:#64748b;margin-bottom:22px}
+  .panel{background:var(--panel-bg);border:1px solid var(--border2);border-radius:28px;padding:32px 24px;margin-bottom:28px;transition:background 0.3s}
+  .panel h3{font-size:18px;font-weight:700;color:var(--text2);margin-bottom:2px}
+  .panel .sub{font-size:12px;color:var(--text4);margin-bottom:22px}
   .chart-wrap{position:relative;width:100%;height:360px}
   .chart-wrap.short{height:260px}
 
   .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;margin-bottom:28px}
 
   .normals-table{width:100%;border-collapse:separate;border-spacing:0 3px;font-size:14px;margin-top:36px}
-  .normals-table th{padding:12px 16px;color:#475569;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid rgba(148,163,184,0.06)}
+  .normals-table th{padding:12px 16px;color:var(--text5);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)}
   .normals-table td{padding:12px 16px;font-family:monospace}
-  .normals-table tr:nth-child(even){background:rgba(148,163,184,0.02)}
+  .normals-table tr:nth-child(even){background:var(--chart-grid)}
 
   .seasons{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px;margin-bottom:28px}
   .season-card{border-radius:22px;padding:32px 24px;text-align:center}
   .season-card .icon{font-size:40px;margin-bottom:10px}
-  .season-card .name{font-size:17px;font-weight:700;color:#e2e8f0}
+  .season-card .name{font-size:17px;font-weight:700;color:var(--text)}
   .season-card .temp{font-size:36px;font-weight:800;margin-top:10px;letter-spacing:-0.03em}
-  .season-card .rain{font-size:13px;color:#64748b;margin-top:8px}
+  .season-card .rain{font-size:13px;color:var(--text4);margin-top:8px}
 
   .decades-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-top:32px}
 
   .heatmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
   .heatmap{border-collapse:separate;border-spacing:2px;width:100%;min-width:700px}
-  .heatmap th{font-size:11px;color:#94a3b8;font-weight:600;padding:6px 4px;text-align:center;position:sticky;top:0;background:#060a13;z-index:2}
-  .heatmap th.month-label{text-align:right;padding-right:10px;width:60px;font-size:12px;position:sticky;left:0;background:#060a13;z-index:3}
+  .heatmap th{font-size:11px;color:var(--text3);font-weight:600;padding:6px 4px;text-align:center;position:sticky;top:0;background:var(--heatmap-sticky);z-index:2}
+  .heatmap th.month-label{text-align:right;padding-right:10px;width:60px;font-size:12px;position:sticky;left:0;background:var(--heatmap-sticky);z-index:3}
   .heatmap td{width:28px;height:26px;border-radius:4px;text-align:center;font-size:9px;font-weight:600;cursor:default;transition:transform 0.15s;position:relative}
-  .heatmap td:hover{transform:scale(1.6);z-index:10;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
+  .heatmap td:hover{transform:scale(1.6);z-index:10;border-radius:6px;box-shadow:0 4px 16px var(--shadow-hover)}
   .heatmap td.empty{background:transparent}
   .hm-legend{display:flex;align-items:center;gap:8px;margin-top:20px;justify-content:center;flex-wrap:wrap}
   .hm-legend-bar{display:flex;height:16px;border-radius:4px;overflow:hidden}
   .hm-legend-bar div{width:28px;height:16px}
-  .hm-legend span{font-size:11px;color:#64748b}
+  .hm-legend span{font-size:11px;color:var(--text4)}
   .hm-year-select{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;align-items:center}
-  .hm-year-select .lbl{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-right:4px}
-  .hm-year-select button{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);color:#94a3b8;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s}
+  .hm-year-select .lbl{font-size:11px;color:var(--text5);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-right:4px}
+  .hm-year-select button{background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--text3);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s}
   .hm-year-select button.active{background:linear-gradient(135deg,#1e3a8a,#2563eb);border-color:rgba(59,130,246,0.3);color:#fff;font-weight:700}
   .hm-month-chart{margin-top:28px}
 
+  .compare-selectors{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px;align-items:center}
+  .compare-selectors label{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em}
+  .compare-selectors select{background:var(--select-bg);border:1px solid var(--select-border);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer;min-width:100px}
+  .compare-selectors select:focus{outline:none;border-color:rgba(59,130,246,0.4)}
+  .compare-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px}
+  .compare-stat{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:center;transition:background 0.3s}
+  .compare-stat .cv{font-size:22px;font-weight:800;line-height:1}
+  .compare-stat .cl{font-size:10px;color:var(--text4);margin-top:4px}
+
   .live-section{max-width:1100px;margin:0 auto;padding:40px 24px 0}
-  .live-panel{background:linear-gradient(160deg,rgba(15,23,42,0.65),rgba(8,12,24,0.8));border:1px solid rgba(148,163,184,0.05);border-radius:28px;padding:32px 28px;position:relative;overflow:hidden}
+  .live-panel{background:var(--panel-bg);border:1px solid var(--border2);border-radius:28px;padding:32px 28px;position:relative;overflow:hidden;transition:background 0.3s}
   .live-panel .pulse{position:absolute;top:32px;right:28px;display:flex;align-items:center;gap:8px;font-size:12px;color:#34d399;font-weight:600}
   .live-panel .pulse-dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 12px #34d399;animation:livePulse 2s ease-in-out infinite}
   @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
   .live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:24px}
-  .live-card{background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:18px;padding:24px}
-  .live-card .label{font-size:11px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
+  .live-card{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:24px;transition:background 0.3s}
+  .live-card .label{font-size:11px;color:var(--text5);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
   .live-current{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
   .live-current .big{font-size:48px;font-weight:800;letter-spacing:-0.04em;line-height:1}
-  .live-current .vs{font-size:13px;color:#94a3b8;line-height:1.5}
+  .live-current .vs{font-size:13px;color:var(--text3);line-height:1.5}
   .live-current .vs strong{font-weight:700}
   .live-diff{display:inline-block;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700;margin-top:8px}
   .live-diff.warm{background:rgba(251,146,60,0.12);color:#fb923c}
   .live-diff.cold{background:rgba(56,189,248,0.12);color:#38bdf8}
   .live-diff.neutral{background:rgba(148,163,184,0.1);color:#94a3b8}
   .live-forecast{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:16px}
-  .live-fday{background:rgba(15,23,42,0.6);border:1px solid rgba(148,163,184,0.04);border-radius:12px;padding:12px 8px;text-align:center}
-  .live-fday .day{font-size:11px;color:#64748b;font-weight:600}
+  .live-fday{background:var(--card-bg2);border:1px solid var(--border3);border-radius:12px;padding:12px 8px;text-align:center;transition:background 0.3s,transform 0.15s,box-shadow 0.15s;cursor:pointer}
+  .live-fday:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.2)}
+  .live-fday.selected{border-color:rgba(59,130,246,0.4);background:rgba(30,58,138,0.2);box-shadow:0 4px 16px rgba(59,130,246,0.15)}
+  .live-fday .day{font-size:11px;color:var(--text4);font-weight:600}
+  .live-fday .tap-hint{font-size:9px;color:var(--text5);margin-top:4px;opacity:0.6}
+  .hourly-detail{margin-top:20px;padding:24px;background:var(--card-bg);border:1px solid var(--border);border-radius:18px;display:none;animation:fadeUp 0.3s ease-out;transition:background 0.3s}
+  .hourly-detail.visible{display:block}
+  .hourly-detail h4{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px}
+  .hourly-detail .detail-sub{font-size:12px;color:var(--text4);margin-bottom:16px}
+  .hourly-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;margin-top:16px}
+  .hourly-cell{background:var(--card-bg2);border:1px solid var(--border3);border-radius:8px;padding:8px 4px;text-align:center;transition:background 0.3s}
+  .hourly-cell .hh{font-size:10px;color:var(--text4);font-weight:600}
+  .hourly-cell .ht{font-size:14px;font-weight:800;margin-top:2px}
+  .hourly-cell .hi-icon{font-size:14px;margin-top:2px}
   .live-fday .hi{font-size:18px;font-weight:800;margin-top:4px}
-  .live-fday .lo{font-size:13px;color:#64748b;margin-top:2px}
+  .live-fday .lo{font-size:13px;color:var(--text4);margin-top:2px}
   .live-fday .icon{font-size:20px;margin-top:4px}
-  .live-loading{display:flex;align-items:center;gap:12px;color:#64748b;font-size:14px;padding:20px 0}
+  .live-loading{display:flex;align-items:center;gap:12px;color:var(--text4);font-size:14px;padding:20px 0}
   .live-loading .spinner{width:20px;height:20px;border:2px solid rgba(56,189,248,0.15);border-top-color:#38bdf8;border-radius:50%;animation:spin 0.8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 
   .stripes-wrap{display:flex;height:120px;border-radius:12px;overflow:hidden;margin:16px 0}
   .stripes-wrap div{flex:1;min-width:0;transition:flex 0.2s}
   .stripes-wrap div:hover{flex:3}
-  .stripes-tooltip{position:absolute;display:none;background:rgba(8,12,24,0.95);border:1px solid rgba(100,150,220,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;pointer-events:none;z-index:50;white-space:nowrap}
-  .stripes-labels{display:flex;justify-content:space-between;font-size:11px;color:#475569;margin-top:4px}
+  .stripes-tooltip{position:absolute;display:none;background:var(--tooltip-bg);border:1px solid var(--tooltip-border);border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;pointer-events:none;z-index:50;white-space:nowrap}
+  .stripes-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text5);margin-top:4px}
   .forecast-history-wrap{position:relative;height:300px;margin-top:16px}
   .month-history-wrap{position:relative;height:280px;margin-top:16px}
   .record-box{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
-  .record-card{flex:1;min-width:120px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 18px;text-align:center}
+  .record-card{flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-align:center;transition:background 0.3s}
   .record-card .rv{font-size:24px;font-weight:800;line-height:1}
-  .record-card .rl{font-size:10px;color:#64748b;margin-top:4px}
+  .record-card .rl{font-size:10px;color:var(--text4);margin-top:4px}
   .decade-card{border-radius:16px;padding:18px 12px;text-align:center}
-  .decade-card .yr{font-size:12px;font-weight:700;color:#94a3b8}
+  .decade-card .yr{font-size:12px;font-weight:700;color:var(--text3)}
   .decade-card .val{font-size:24px;font-weight:800;margin-top:4px}
-  .decade-card .mm{font-size:10px;color:#475569;margin-top:2px}
+  .decade-card .mm{font-size:10px;color:var(--text5);margin-top:2px}
 
-  footer{border-top:1px solid rgba(148,163,184,0.05);background:rgba(6,10,19,0.95);padding:56px 24px}
+  footer{border-top:1px solid var(--footer-border);background:var(--footer-bg);padding:56px 24px;transition:background 0.3s}
   .footer-inner{max-width:1100px;margin:0 auto}
   .footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:48px;margin-bottom:48px}
-  .footer-grid h4{font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
-  .footer-grid p,.footer-grid div.items{font-size:13px;color:#475569;line-height:2.2}
-  .footer-bottom{border-top:1px solid rgba(148,163,184,0.04);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:#334155}
+  .footer-grid h4{font-size:11px;color:var(--text4);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
+  .footer-grid p,.footer-grid div.items{font-size:13px;color:var(--text5);line-height:2.2}
+  .footer-bottom{border-top:1px solid var(--border3);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--text6)}
 
-  @media(max-width:700px){
+  /* ═══ MOBILE MENU ═══ */
+  .nav-menu-btn{display:none;background:var(--card-bg);border:1px solid var(--border);color:var(--text3);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+  .nav-menu-btn:hover{color:var(--text);border-color:var(--border2)}
+  .nav-mobile{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:var(--bg);z-index:99;padding:20px 24px;overflow-y:auto}
+  .nav-mobile.open{display:flex;flex-direction:column;gap:4px;animation:fadeUp 0.2s ease-out}
+  .nav-mobile button{background:var(--card-bg);border:1px solid var(--border);color:var(--text3);padding:14px 20px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:500;text-align:left;font-family:inherit;transition:all 0.2s;width:100%}
+  .nav-mobile button:hover,.nav-mobile button:active{color:var(--text);background:var(--card-bg2)}
+
+  /* ═══ TABLET (max 900px) ═══ */
+  @media(max-width:900px){
     .nav-links{display:none}
-    .hero h1{font-size:36px}
-    .hero h1 .sub{font-size:20px}
-    .controls{flex-direction:column;align-items:flex-start}
+    .nav-menu-btn{display:flex}
+    .hero{padding:70px 20px 60px}
+    .hero h1{font-size:clamp(32px,6vw,52px)}
+    .hero h1 .sub{font-size:clamp(18px,3vw,30px)}
+    .hero-stats{gap:12px}
+    .hero-stat{padding:20px 18px;border-radius:18px}
+    .hero-stat .val{font-size:28px}
+    .controls{flex-direction:column;align-items:stretch;gap:12px;margin:40px 0 28px}
+    .range-btns{justify-content:center}
+    .view-btns{flex-wrap:wrap;justify-content:center}
+    .view-btns button{padding:8px 14px;font-size:12px}
     .grid2{grid-template-columns:1fr}
-    .chart-wrap{height:280px}
-    .chart-wrap.short{height:220px}
+    .seasons{grid-template-columns:repeat(2,1fr)}
+    .decades-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+    .live-grid{grid-template-columns:1fr}
+    .live-forecast{grid-template-columns:repeat(7,1fr);gap:6px}
+    .live-fday .tap-hint{display:none}
+    .compare-selectors{gap:12px}
+    .compare-stat-grid{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+    .footer-grid{grid-template-columns:1fr;gap:32px}
+  }
+
+  /* ═══ MOBILE (max 600px) ═══ */
+  @media(max-width:600px){
+    nav{padding:0 16px}
+    .nav-inner{height:52px}
+    .nav-logo-icon{width:28px;height:28px;font-size:14px;border-radius:8px}
+    .theme-toggle,.nav-menu-btn{width:32px;height:32px;font-size:16px;border-radius:8px}
+    .hero{padding:50px 16px 40px}
+    .hero h1{font-size:32px}
+    .hero h1 .sub{font-size:18px}
+    .hero p.desc{font-size:14px;margin:20px 0 32px}
+    .hero-stats{flex-direction:column;gap:10px}
+    .hero-stat{flex:none;padding:18px 16px;border-radius:16px}
+    .hero-stat .val{font-size:26px}
+    .hero-stat .lbl{font-size:11px}
+    .content{padding:0 16px 60px}
+    .range-btns button,.view-btns button{padding:8px 12px;font-size:11px}
+    .panel{padding:20px 16px;border-radius:20px;margin-bottom:20px}
+    .panel h3{font-size:16px}
+    .chart-wrap{height:250px}
+    .chart-wrap.short{height:200px}
+    .live-section{padding:24px 16px 0}
+    .live-panel{padding:20px 16px;border-radius:20px}
+    .live-current .big{font-size:38px}
+    .live-forecast{grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:5px}
+    .live-fday{padding:10px 4px;border-radius:10px}
+    .live-fday .hi{font-size:16px}
+    .live-fday .lo{font-size:11px}
+    .live-fday .icon{font-size:18px}
+    .live-fday .day{font-size:10px}
+    .live-fday .tap-hint{display:none}
+    .hourly-detail{padding:16px;border-radius:14px}
+    .hourly-detail-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:3px}
+    .hourly-cell{padding:6px 2px;border-radius:6px}
+    .hourly-cell .ht{font-size:12px}
+    .hourly-cell .hh{font-size:9px}
+    .hourly-cell .hi-icon{font-size:12px}
+    .hourly-chart-wrap{height:200px}
+    .record-box,.record-live-box{gap:8px}
+    .record-card,.record-live-card{padding:12px;border-radius:12px;min-width:90px}
+    .record-card .rv,.record-live-card .rv{font-size:18px}
+    .compare-stat-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+    .compare-stat{padding:10px 12px;border-radius:12px}
+    .compare-stat .cv{font-size:18px}
+    .forecast-history-wrap{height:240px}
+    .month-history-wrap{height:220px}
+    .stripes-wrap{height:80px}
+    .normals-table{font-size:12px}
+    .normals-table th,.normals-table td{padding:8px 10px}
+    .season-card{padding:20px 16px;border-radius:16px}
+    .season-card .temp{font-size:28px}
+    .season-card .icon{font-size:32px}
+    .rain-tracker{padding:16px}
+    footer{padding:36px 16px}
+    .footer-bottom{flex-direction:column;text-align:center}
+  }
+
+  /* ═══ SMALL PHONE (max 380px) ═══ */
+  @media(max-width:380px){
+    .hero h1{font-size:26px}
+    .hero h1 .sub{font-size:16px}
+    .hero-stat .val{font-size:22px}
+    .live-current .big{font-size:32px}
+    .live-forecast{grid-template-columns:repeat(auto-fill,minmax(56px,1fr))}
+    .live-fday .hi{font-size:14px}
+    .view-btns button{padding:7px 10px;font-size:10px}
   }
 
   .hourly-chart-wrap{position:relative;height:250px;margin-top:16px}
   .record-live-box{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
-  .record-live-card{flex:1;min-width:130px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:14px;padding:16px 18px;text-align:center}
+  .record-live-card{flex:1;min-width:130px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-align:center;transition:background 0.3s}
   .record-live-card .rv{font-size:22px;font-weight:800;line-height:1}
-  .record-live-card .rl{font-size:10px;color:#64748b;margin-top:4px}
-  .rain-tracker{margin-top:20px;padding:20px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.06);border-radius:18px}
-  .rain-bar-wrap{height:24px;background:rgba(148,163,184,0.08);border-radius:12px;overflow:hidden;margin-top:12px;position:relative}
+  .record-live-card .rl{font-size:10px;color:var(--text4);margin-top:4px}
+  .rain-tracker{margin-top:20px;padding:20px;background:var(--card-bg);border:1px solid var(--border);border-radius:18px;transition:background 0.3s}
+  .rain-bar-wrap{height:24px;background:var(--chart-grid);border-radius:12px;overflow:hidden;margin-top:12px;position:relative}
   .rain-bar{height:100%;border-radius:12px;transition:width 0.5s}
-  .rain-bar-label{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:#94a3b8;font-weight:600}
+  .rain-bar-label{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text3);font-weight:600}
 
-  .data-load-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#060a13;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.5s}
-  .load-title{font-size:24px;font-weight:800;color:#f1f5f9}
-  .load-msg{color:#94a3b8;font-size:14px;text-align:center}
+  .data-load-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.5s}
+  .load-title{font-size:24px;font-weight:800;color:var(--text2)}
+  .load-msg{color:var(--text3);font-size:14px;text-align:center}
   .load-bar{width:320px;max-width:80vw;height:6px;background:rgba(148,163,184,0.1);border-radius:3px;overflow:hidden}
   .load-bar-inner{height:100%;background:linear-gradient(90deg,#1e40af,#3b82f6);border-radius:3px;transition:width 0.4s}
-  .load-pct{color:#475569;font-size:12px;font-variant-numeric:tabular-nums}
+  .load-pct{color:var(--text5);font-size:12px;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -191,21 +340,38 @@
   <div class="nav-inner">
     <div class="nav-logo" onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">
       <div class="nav-logo-icon">O</div>
-      <span style="font-size:17px;font-weight:700;letter-spacing:-0.02em;color:#f1f5f9">OuluSää</span>
+      <span style="font-size:17px;font-weight:700;letter-spacing:-0.02em;color:var(--text2)">OuluSää</span>
       <span style="font-size:10px;color:#3b82f6;font-weight:600;background:rgba(59,130,246,0.1);padding:3px 10px;border-radius:99px">BETA</span>
     </div>
-    <div class="nav-links">
-      <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Yleiskatsaus</button>
-      <button onclick="document.getElementById('liveSection').scrollIntoView({behavior:'smooth'})" style="color:#34d399">● Live</button>
-      <button onclick="switchView('yearly')">Lämpötila</button>
-      <button onclick="switchView('monthly')">Kuukausittain</button>
-      <button onclick="switchView('normals')">Normaalit</button>
-      <button onclick="switchView('decades')">Vuosikymmenet</button>
-      <button onclick="switchView('heatmap')">Lämpökartta</button>
-      <button onclick="switchView('stripes')">Ilmastoraidat</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Vaihda teemaa">☀️</button>
+      <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleMobileNav()" title="Valikko">☰</button>
+      <div class="nav-links">
+        <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Yleiskatsaus</button>
+        <button onclick="document.getElementById('liveSection').scrollIntoView({behavior:'smooth'})" style="color:#34d399">● Live</button>
+        <button onclick="switchView('yearly')">Lämpötila</button>
+        <button onclick="switchView('monthly')">Kuukausittain</button>
+        <button onclick="switchView('normals')">Normaalit</button>
+        <button onclick="switchView('decades')">Vuosikymmenet</button>
+        <button onclick="switchView('heatmap')">Lämpökartta</button>
+        <button onclick="switchView('stripes')">Ilmastoraidat</button>
+      </div>
     </div>
   </div>
 </nav>
+<div class="nav-mobile" id="navMobile">
+  <button onclick="mobileNav('hero')">🏠 Yleiskatsaus</button>
+  <button onclick="mobileNav('liveSection')">🟢 Live-sää</button>
+  <button onclick="mobileNavView('yearly')">📊 Vuosittain</button>
+  <button onclick="mobileNavView('monthly')">📅 Kuukausittain</button>
+  <button onclick="mobileNavView('normals')">📏 Normaalit</button>
+  <button onclick="mobileNavView('decades')">📈 Vuosikymmenet</button>
+  <button onclick="mobileNavView('heatmap')">🗓️ Lämpökartta</button>
+  <button onclick="mobileNavView('stripes')">🌡️ Ilmastoraidat</button>
+  <button onclick="mobileNavView('thismonth')">📆 Tämä kuukausi</button>
+  <button onclick="mobileNavView('compare')">⚖️ Vertailu</button>
+  <button onclick="mobileNavView('extremes')">🔥 Ääripäivät</button>
+</div>
 
 <!-- HERO -->
 <header class="hero" id="hero">
@@ -214,7 +380,7 @@
   <div class="hero-inner">
     <div class="hero-badge">
       <div class="hero-badge-dot"></div>
-      <span style="font-size:12px;color:#60a5fa;font-weight:600">85 vuotta säähistoriaa</span>
+      <span style="font-size:12px;color:#60a5fa;font-weight:600">Yli 85 vuotta säähistoriaa</span>
     </div>
     <h1>
       <span class="main">Oulun ilmasto</span>
@@ -225,7 +391,7 @@
       <div class="hero-stat"><div class="val" style="color:#fb923c" id="heroTemp">–</div><div class="lbl">Vuoden 2024 keskilämpö</div></div>
       <div class="hero-stat"><div class="val" style="color:#34d399" id="heroPrecip">–</div><div class="lbl">Sademäärä 2024</div></div>
       <div class="hero-stat"><div class="val" style="color:#818cf8" id="heroRecordLo">–</div><div class="lbl">Ennätysalin</div></div>
-      <div class="hero-stat"><div class="val" style="color:#f43f5e" id="heroWarming">–</div><div class="lbl">Lämpeneminen 85v aikana</div></div>
+      <div class="hero-stat"><div class="val" style="color:#f43f5e" id="heroWarming">–</div><div class="lbl">Lämpeneminen 1940-luvulta</div></div>
     </div>
   </div>
 </header>
@@ -247,7 +413,7 @@
   <div class="controls" id="charts">
     <div class="range-btns">
       <span class="label">Aikajakso</span>
-      <button class="active" onclick="setRange(0,this)">1940–2024</button>
+      <button class="active" onclick="setRange(0,this)">1940–tänään</button>
       <button onclick="setRange(1,this)">1990–2024</button>
       <button onclick="setRange(2,this)">2000–2024</button>
       <button onclick="setRange(3,this)">2015–2024</button>
@@ -260,6 +426,8 @@
       <button onclick="switchView('heatmap',this)">Lämpökartta</button>
       <button onclick="switchView('stripes',this)">Ilmastoraidat</button>
       <button onclick="switchView('thismonth',this)">Tämä kuukausi</button>
+      <button onclick="switchView('compare',this)">Vertailu</button>
+      <button onclick="switchView('extremes',this)">Ääripäivät</button>
     </div>
   </div>
 
@@ -270,6 +438,8 @@
   <div id="viewHeatmap" style="display:none"></div>
   <div id="viewStripes" style="display:none"></div>
   <div id="viewThismonth" style="display:none"></div>
+  <div id="viewCompare" style="display:none"></div>
+  <div id="viewExtremes" style="display:none"></div>
 </div>
 
 <!-- FOOTER -->
@@ -289,7 +459,7 @@
       </div>
       <div>
         <h4>Tietoa datasta</h4>
-        <div class="items"><div>Koordinaatit: 65.01°N, 25.47°E</div><div>Spatiaalinen resoluutio: 9–25 km</div><div>85 vuotta havaintoja</div><div>1020 kuukausidatapistettä</div></div>
+        <div class="items"><div>Koordinaatit: 65.01°N, 25.47°E</div><div>Spatiaalinen resoluutio: 9–25 km</div><div>Yli 85 vuotta havaintoja</div><div>1020 kuukausidatapistettä</div></div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -306,13 +476,19 @@ const DAYS_IN_MONTH=[31,29,31,30,31,30,31,31,30,31,30,31];
 let NORMALS=[],YR=[],MO=[],DEC=[],SEASONS=[],DAILY={};
 
 // ═══ ASYNC DATA LOADER ═══
-const ARCHIVE_CHUNKS=[
-  ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
-  ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
-  ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
-  ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
-  ['2020-01-01','2024-12-31']
-];
+// Build chunks dynamically up to yesterday (max 10y per chunk)
+function buildArchiveChunks(){
+  const yesterday=new Date(Date.now()-86400000);
+  const endDate=yesterday.toISOString().slice(0,10);
+  return [
+    ['1940-01-01','1949-12-31'],['1950-01-01','1959-12-31'],
+    ['1960-01-01','1969-12-31'],['1970-01-01','1979-12-31'],
+    ['1980-01-01','1989-12-31'],['1990-01-01','1999-12-31'],
+    ['2000-01-01','2009-12-31'],['2010-01-01','2019-12-31'],
+    ['2020-01-01',endDate]
+  ];
+}
+const ARCHIVE_CHUNKS=buildArchiveChunks();
 
 function showLoadingOverlay(msg,pct){
   const ol=document.getElementById('dataLoadOverlay');
@@ -328,7 +504,7 @@ function hideLoadingOverlay(){
 }
 
 async function fetchArchiveData(){
-  const cacheKey='oulusaa_archive_v4';
+  const cacheKey='oulusaa_archive_v6';
   try{
     const cached=localStorage.getItem(cacheKey);
     if(cached){
@@ -342,28 +518,41 @@ async function fetchArchiveData(){
 
   showLoadingOverlay('Haetaan historiallista säädataa...',0);
 
-  const allTime=[],allMean=[],allMax=[],allMin=[],allPrecip=[],allSnow=[];
+  const total=ARCHIVE_CHUNKS.length;
+  let completed=0;
 
-  for(let i=0;i<ARCHIVE_CHUNKS.length;i++){
-    const [start,end]=ARCHIVE_CHUNKS[i];
-    const pct=((i+0.5)/ARCHIVE_CHUNKS.length)*90;
-    showLoadingOverlay('Haetaan '+start.slice(0,4)+'–'+end.slice(0,4)+'... ('+(i+1)+'/'+ARCHIVE_CHUNKS.length+')',pct);
-
+  // Fetch single chunk with retry + 429 backoff
+  async function fetchChunk(start,end,idx){
     const url='https://archive-api.open-meteo.com/v1/archive?latitude=65.0121&longitude=25.4651&start_date='+start+'&end_date='+end+'&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&timezone=Europe%2FHelsinki';
-
-    let json=null;
-    for(let retry=0;retry<4;retry++){
+    for(let retry=0;retry<5;retry++){
       try{
         const resp=await fetch(url);
+        if(resp.status===429){
+          await new Promise(r=>setTimeout(r,Math.min(30000,2000*Math.pow(2,retry))));
+          continue;
+        }
         if(!resp.ok)throw new Error('HTTP '+resp.status);
-        json=await resp.json();
-        break;
+        const json=await resp.json();
+        completed++;
+        showLoadingOverlay('Haettu '+completed+'/'+total+' ('+start.slice(0,4)+'–'+end.slice(0,4)+')',completed/total*90);
+        return json;
       }catch(e){
-        if(retry===3)throw new Error('API-haku epäonnistui chunk '+(i+1)+': '+e.message);
-        await new Promise(r=>setTimeout(r,1000*(retry+1)));
+        if(retry===4)throw new Error('API-haku epäonnistui '+start.slice(0,4)+'–'+end.slice(0,4)+': '+e.message);
+        await new Promise(r=>setTimeout(r,2000*(retry+1)));
       }
     }
+  }
 
+  // Launch all chunks with 400ms stagger — parallel but gentle
+  const results=await Promise.all(
+    ARCHIVE_CHUNKS.map(([s,e],i)=>
+      new Promise(r=>setTimeout(r,i*400)).then(()=>fetchChunk(s,e,i))
+    )
+  );
+
+  // Merge results in order
+  const allTime=[],allMean=[],allMax=[],allMin=[],allPrecip=[],allSnow=[];
+  results.forEach(json=>{
     const d=json.daily;
     allTime.push(...d.time);
     allMean.push(...(d.temperature_2m_mean||[]));
@@ -371,7 +560,7 @@ async function fetchArchiveData(){
     allMin.push(...(d.temperature_2m_min||[]));
     allPrecip.push(...(d.precipitation_sum||[]));
     allSnow.push(...(d.snowfall_sum||[]));
-  }
+  });
 
   showLoadingOverlay('Tallennetaan välimuistiin...',95);
 
@@ -527,21 +716,70 @@ async function init(){
     console.error('Data load failed:',e);
     const ol=document.getElementById('dataLoadOverlay');
     if(ol){
-      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v4\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
+      ol.querySelector('.load-msg').innerHTML='<div style="color:#f87171;font-weight:700;margin-bottom:8px">Virhe datan haussa</div><div style="font-size:12px;color:#475569;margin-bottom:16px">'+e.message+'</div><button onclick="localStorage.removeItem(\'oulusaa_archive_v6\');location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">Yritä uudelleen</button>';
       ol.querySelector('.load-bar').style.display='none';
       ol.querySelector('.load-pct').style.display='none';
     }
   }
 }
 
-const RANGES=[{s:1940,e:2024},{s:1990,e:2024},{s:2000,e:2024},{s:2015,e:2024}];
+const _endYr=new Date().getFullYear();
+const RANGES=[{s:1940,e:_endYr},{s:1990,e:_endYr},{s:2000,e:_endYr},{s:2015,e:_endYr}];
 let currentRange=0, currentView='yearly';
 const charts={};
 
 
+// ═══ THEME ═══
+function getTheme(){return localStorage.getItem('oulusaa_theme')||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeToggle').textContent=t==='light'?'🌙':'☀️';
+  // Update Chart.js defaults
+  const isDark=t==='dark';
+  Chart.defaults.color=isDark?'#64748b':'#475569';
+  Chart.defaults.borderColor=isDark?'rgba(148,163,184,0.06)':'rgba(51,65,85,0.1)';
+  // Update meta theme-color
+  document.querySelector('meta[name="theme-color"]').content=isDark?'#060a13':'#f8fafc';
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  const next=cur==='dark'?'light':'dark';
+  localStorage.setItem('oulusaa_theme',next);
+  applyTheme(next);
+  // Re-render current view to update chart colors
+  if(typeof renderCurrentView==='function'&&YR.length>0){Object.keys(charts).forEach(destroyChart);renderCurrentView();}
+}
+// Apply saved theme immediately
+applyTheme(getTheme());
+
+// ═══ MOBILE NAV ═══
+function toggleMobileNav(){
+  const nav=document.getElementById('navMobile');
+  const btn=document.getElementById('navMenuBtn');
+  const isOpen=nav.classList.contains('open');
+  nav.classList.toggle('open');
+  btn.textContent=isOpen?'☰':'✕';
+  document.body.style.overflow=isOpen?'':'hidden';
+}
+function closeMobileNav(){
+  const nav=document.getElementById('navMobile');
+  const btn=document.getElementById('navMenuBtn');
+  nav.classList.remove('open');
+  btn.textContent='☰';
+  document.body.style.overflow='';
+}
+function mobileNav(id){
+  closeMobileNav();
+  setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth'}),100);
+}
+function mobileNavView(v){
+  closeMobileNav();
+  setTimeout(()=>switchView(v),100);
+}
+
 // ═══ CHART HELPERS ═══
-Chart.defaults.color='#64748b';
-Chart.defaults.borderColor='rgba(148,163,184,0.06)';
+Chart.defaults.color=getTheme()==='dark'?'#64748b':'#475569';
+Chart.defaults.borderColor=getTheme()==='dark'?'rgba(148,163,184,0.06)':'rgba(51,65,85,0.1)';
 Chart.defaults.font.family="system-ui,-apple-system,sans-serif";
 
 function makeCanvas(id){
@@ -617,7 +855,7 @@ function renderNormals(){
     <div class="rain">${s.precip} mm/kk</div></div>`).join('');
 
   el.innerHTML=`
-    <div class="panel"><h3>Ilmastonormaalit</h3><p class="sub">Pitkän aikavälin kuukausikeskiarvot (1940–2024)</p>
+    <div class="panel"><h3>Ilmastonormaalit</h3><p class="sub">Pitkän aikavälin kuukausikeskiarvot (1940–tänään)</p>
       <div class="chart-wrap" style="height:400px"><canvas id="cNorm"></canvas></div>
       <div style="overflow-x:auto"><table class="normals-table"><thead><tr>
         <th style="text-align:left">Kuukausi</th><th style="text-align:right">Keskilämpö</th><th style="text-align:right">Ylin</th><th style="text-align:right">Alin</th><th style="text-align:right">Sade</th><th style="text-align:right">Lumi</th>
@@ -826,7 +1064,7 @@ function renderHeatmap(){
     </div>
 
     <div class="panel" style="margin-top:28px">
-      <h3>Keskiarvo koko ajalta (1940–2024)</h3>
+      <h3>Keskiarvo koko ajalta (1940–tänään)</h3>
       <p class="sub">Jokaisen päivän keskilämpötila keskiarvona kaikista 85 vuodesta. Näyttää tyypillisen vuoden lämpöprofiilin.</p>
       <div class="heatmap-wrap">${avgHeatmapHTML}</div>
       <div class="hm-legend" style="margin-top:16px">
@@ -981,6 +1219,245 @@ function renderThismonth(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.parsed.y.toFixed(1)+'°C'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});}
 }
 
+// ═══ YEAR COMPARISON ═══
+let cmpYear1=2024, cmpYear2=1940;
+
+function renderCompare(){
+  const el=document.getElementById('viewCompare');
+  const availYears=YR.map(y=>y.year);
+
+  // Ensure selected years exist
+  if(!availYears.includes(cmpYear1)) cmpYear1=availYears[availYears.length-1];
+  if(!availYears.includes(cmpYear2)) cmpYear2=availYears[0];
+
+  const opts=availYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  el.innerHTML=`
+    <div class="panel">
+      <h3>Vuosivertailu</h3>
+      <p class="sub">Valitse kaksi vuotta ja vertaile päivittäisiä lämpötiloja päällekkäin</p>
+      <div class="compare-selectors">
+        <div>
+          <label>Vuosi 1</label><br>
+          <select id="cmpSel1" onchange="cmpYear1=+this.value;renderCompare()">${opts}</select>
+        </div>
+        <div>
+          <label>Vuosi 2</label><br>
+          <select id="cmpSel2" onchange="cmpYear2=+this.value;renderCompare()">${opts}</select>
+        </div>
+        <button onclick="cmpYear1=cmpYear2;cmpYear2=[cmpYear2,cmpYear1=cmpYear1][0];renderCompare()" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);color:#60a5fa;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;margin-top:16px">⇄ Vaihda</button>
+      </div>
+      <div class="chart-wrap" style="height:400px"><canvas id="cCompare"></canvas></div>
+      <div id="cmpStats"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Kuukausikeskilämpötilat</h3>
+        <p class="sub">Kuukausivertailu kahden vuoden välillä</p>
+        <div class="chart-wrap short"><canvas id="cCompareMonth"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Sademäärä kuukausittain</h3>
+        <p class="sub">mm / kuukausi</p>
+        <div class="chart-wrap short"><canvas id="cComparePrecip"></canvas></div>
+      </div>
+    </div>`;
+
+  // Set selected values
+  document.getElementById('cmpSel1').value=cmpYear1;
+  document.getElementById('cmpSel2').value=cmpYear2;
+
+  const d1=DAILY[cmpYear1], d2=DAILY[cmpYear2];
+  if(!d1||!d2) return;
+
+  // Build daily temperature arrays for the full year
+  function yearDailyTemps(d,year){
+    const temps=[],labels=[];
+    const leap=(year%4===0&&year%100!==0)||year%400===0;
+    for(let m=1;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let day=0;day<md.dim;day++){
+        temps.push(md.days[day]);
+        labels.push((day+1)+'.'+m+'.');
+      }
+    }
+    return {temps,labels};
+  }
+
+  const y1=yearDailyTemps(d1,cmpYear1);
+  const y2=yearDailyTemps(d2,cmpYear2);
+  const maxLen=Math.max(y1.labels.length,y2.labels.length);
+  const labels=(y1.labels.length>=y2.labels.length)?y1.labels:y2.labels;
+
+  // Daily chart
+  const ctx=document.getElementById('cCompare').getContext('2d');
+  destroyChart('cCompare');
+  charts.cCompare=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
+    {label:cmpYear1+'',data:y1.temps,borderColor:'#fb923c',backgroundColor:'rgba(251,146,60,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},
+    {label:cmpYear2+'',data:y2.temps,borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{padding:16,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–')}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12,callback:function(v,i){const l=this.getLabelForValue(i);return l.endsWith('1.')?MONTHS_FI[parseInt(l.split('.')[1])-1]:''}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  // Monthly comparison data
+  const m1=MO.filter(m=>m.year===cmpYear1);
+  const m2=MO.filter(m=>m.year===cmpYear2);
+  const monthLabels=MONTHS_FI;
+
+  const m1temps=monthLabels.map((_,i)=>{const mo=m1.find(m=>m.month===i+1);return mo?mo.temp:null;});
+  const m2temps=monthLabels.map((_,i)=>{const mo=m2.find(m=>m.month===i+1);return mo?mo.temp:null;});
+  const m1precip=monthLabels.map((_,i)=>{const mo=m1.find(m=>m.month===i+1);return mo?mo.precip:null;});
+  const m2precip=monthLabels.map((_,i)=>{const mo=m2.find(m=>m.month===i+1);return mo?mo.precip:null;});
+
+  // Monthly temp chart
+  const ctx2=document.getElementById('cCompareMonth').getContext('2d');
+  destroyChart('cCompareMonth');
+  charts.cCompareMonth=new Chart(ctx2,{type:'line',data:{labels:monthLabels,datasets:[
+    {label:cmpYear1+'',data:m1temps,borderColor:'#fb923c',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#fb923c',pointBorderWidth:2.5,pointRadius:5,borderWidth:2.5,tension:0.3},
+    {label:cmpYear2+'',data:m2temps,borderColor:'#38bdf8',backgroundColor:'#060a13',pointBackgroundColor:'#060a13',pointBorderColor:'#38bdf8',pointBorderWidth:2.5,pointRadius:5,borderWidth:2.5,tension:0.3}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–')}}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
+
+  // Monthly precip chart
+  const ctx3=document.getElementById('cComparePrecip').getContext('2d');
+  destroyChart('cComparePrecip');
+  charts.cComparePrecip=new Chart(ctx3,{type:'bar',data:{labels:monthLabels,datasets:[
+    {label:cmpYear1+'',data:m1precip,backgroundColor:'rgba(251,146,60,0.5)',borderRadius:4,borderSkipped:false},
+    {label:cmpYear2+'',data:m2precip,backgroundColor:'rgba(56,189,248,0.5)',borderRadius:4,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'mm'}}}}});
+
+  // Stats comparison
+  const yr1=YR.find(y=>y.year===cmpYear1);
+  const yr2=YR.find(y=>y.year===cmpYear2);
+  if(yr1&&yr2){
+    const tDiff=(yr1.temp-yr2.temp).toFixed(1);
+    const pDiff=yr1.precip-yr2.precip;
+    // Find daily min/max for each year
+    const minMax=(d)=>{let mn=999,mx=-999;for(let m=1;m<=12;m++){if(d[m])d[m].days.forEach(t=>{if(t!=null){if(t<mn)mn=t;if(t>mx)mx=t;}});}return{min:mn,max:mx};};
+    const mm1=minMax(d1),mm2=minMax(d2);
+
+    document.getElementById('cmpStats').innerHTML=`
+      <div class="compare-stat-grid">
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${yr1.temp>0?'+':''}${yr1.temp}°</div><div class="cl">${cmpYear1} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${yr2.temp>0?'+':''}${yr2.temp}°</div><div class="cl">${cmpYear2} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${tDiff>0?'#f87171':'#34d399'}">${tDiff>0?'+':''}${tDiff}°</div><div class="cl">Ero keskilämpö</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">+${mm1.max.toFixed(1)}°</div><div class="cl">${cmpYear1} lämpimin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">+${mm2.max.toFixed(1)}°</div><div class="cl">${cmpYear2} lämpimin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${mm1.min.toFixed(1)}°</div><div class="cl">${cmpYear1} kylmin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${mm2.min.toFixed(1)}°</div><div class="cl">${cmpYear2} kylmin</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${yr1.precip}mm</div><div class="cl">${cmpYear1} sade</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${yr2.precip}mm</div><div class="cl">${cmpYear2} sade</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${pDiff>0?'#34d399':'#fb923c'}">${pDiff>0?'+':''}${pDiff}mm</div><div class="cl">Ero sademäärä</div></div>
+      </div>`;
+  }
+}
+
+// ═══ EXTREME DAYS ═══
+function renderExtremes(){
+  const el=document.getElementById('viewExtremes');
+  const {s,e}=RANGES[currentRange];
+
+  // Count extreme days per year
+  const frostDays=[];   // daily min < 0
+  const coldDays=[];    // daily mean < -20
+  const hotDays=[];     // daily max > +25
+  const tropDays=[];    // daily max > +30
+  const iceDays=[];     // daily max < 0
+
+  const years=YR.filter(y=>y.year>=s&&y.year<=e);
+
+  years.forEach(yr=>{
+    const y=yr.year;
+    const d=DAILY[y];
+    if(!d){frostDays.push(0);coldDays.push(0);hotDays.push(0);tropDays.push(0);iceDays.push(0);return;}
+    let frost=0,cold=0,hot=0,trop=0,ice=0;
+    for(let m=1;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let i=0;i<md.dim;i++){
+        const mean=md.days[i];
+        const mx=md.max&&md.max[i]!=null?md.max[i]:mean;
+        const mn=md.min&&md.min[i]!=null?md.min[i]:mean;
+        if(mn!=null&&mn<0)frost++;
+        if(mean!=null&&mean<-20)cold++;
+        if(mx!=null&&mx>25)hot++;
+        if(mx!=null&&mx>30)trop++;
+        if(mx!=null&&mx<0)ice++;
+      }
+    }
+    frostDays.push(frost);coldDays.push(cold);hotDays.push(hot);tropDays.push(trop);iceDays.push(ice);
+  });
+
+  const labels=years.map(y=>y.year);
+
+  // Stats
+  const avg=(arr)=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):0;
+  const trend=(arr)=>{
+    if(arr.length<10)return 0;
+    const f5=arr.slice(0,5),l5=arr.slice(-5);
+    return((l5.reduce((a,b)=>a+b,0)/5)-(f5.reduce((a,b)=>a+b,0)/5)).toFixed(1);
+  };
+  const hotTrend=trend(hotDays);
+  const coldTrend=trend(coldDays);
+  const iceTrend=trend(iceDays);
+
+  el.innerHTML=`
+    <div class="panel">
+      <h3>Hellepäivät (ylin > +25°C)</h3>
+      <p class="sub">Päivät joina ylin lämpötila ylitti +25°C — ${s}–${e}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${avg(hotDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${Math.max(...hotDays)}</div><div class="cl">Eniten (${labels[hotDays.indexOf(Math.max(...hotDays))]})</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${hotTrend>0?'#f87171':'#34d399'}">${hotTrend>0?'+':''}${hotTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cHotDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Trooppiset päivät (ylin > +30°C)</h3>
+      <p class="sub">Harvinaisia Oulussa — kuinka monta per vuosi?</p>
+      <div class="chart-wrap short"><canvas id="cTropDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Kovien pakkasten päivät (keskilämpö < -20°C)</h3>
+      <p class="sub">Päivät joina vuorokauden keskilämpötila alitti -20°C</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${avg(coldDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${Math.max(...coldDays)}</div><div class="cl">Eniten (${labels[coldDays.indexOf(Math.max(...coldDays))]})</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${coldTrend<0?'#34d399':'#f87171'}">${coldTrend>0?'+':''}${coldTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cColdDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Jääpäivät (ylin < 0°C)</h3>
+      <p class="sub">Päivät joina lämpötila ei noussut plussan puolelle</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#818cf8">${avg(iceDays)}</div><div class="cl">Keskimäärin / vuosi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${iceTrend<0?'#34d399':'#f87171'}">${iceTrend>0?'+':''}${iceTrend}</div><div class="cl">Muutos (alku vs. loppu)</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cIceDays"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Pakkaspäivät (alin < 0°C)</h3>
+      <p class="sub">Päivät joina alin lämpötila laski alle nollan</p>
+      <div class="chart-wrap short"><canvas id="cFrostDays"></canvas></div>
+    </div>`;
+
+  function makeBarChart(id,data,label,color,colorAlpha){
+    const ctx=document.getElementById(id).getContext('2d');
+    destroyChart(id);
+    // Moving average (10 year)
+    const ma=data.map((v,i)=>{const w=Math.min(10,i+1);const sl=data.slice(Math.max(0,i-w+1),i+1);return+(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1);});
+    charts[id]=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+      {type:'bar',label:label,data:data,backgroundColor:colorAlpha,borderRadius:3,borderSkipped:false,order:2},
+      {type:'line',label:'10v liukuva ka.',data:ma,borderColor:color,borderWidth:2.5,pointRadius:0,tension:0.4,order:1}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},beginAtZero:true,ticks:{callback:v=>v+' pv'}}}}});
+  }
+
+  makeBarChart('cHotDays',hotDays,'Hellepäivät (>+25°C)','#fb923c','rgba(251,146,60,0.4)');
+  makeBarChart('cTropDays',tropDays,'Trooppiset (>+30°C)','#ef4444','rgba(239,68,68,0.4)');
+  makeBarChart('cColdDays',coldDays,'Kova pakkanen (<-20°C)','#38bdf8','rgba(56,189,248,0.4)');
+  makeBarChart('cIceDays',iceDays,'Jääpäivät (max <0°C)','#818cf8','rgba(129,140,248,0.4)');
+  makeBarChart('cFrostDays',frostDays,'Pakkaspäivät (min <0°C)','#a5b4fc','rgba(165,180,252,0.3)');
+}
+
 // ═══ MAIN CONTROLLERS ═══
 function setRange(i,btn){
   currentRange=i;
@@ -993,18 +1470,18 @@ function setRange(i,btn){
 
 function switchView(v,btn){
   currentView=v;
-  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth'].forEach(id=>{document.getElementById(id).style.display='none';});
+  ['viewYearly','viewMonthly','viewNormals','viewDecades','viewHeatmap','viewStripes','viewThismonth','viewCompare','viewExtremes'].forEach(id=>{document.getElementById(id).style.display='none';});
   document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).style.display='block';
   document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
+  else{const idx={yearly:0,monthly:1,normals:2,decades:3,heatmap:4,stripes:5,thismonth:6,compare:7,extremes:8}[v];document.querySelectorAll('#viewBtns button')[idx]?.classList.add('active');}
   Object.keys(charts).forEach(destroyChart);
   renderCurrentView();
   document.getElementById('charts').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderCurrentView(){
-  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth})[currentView]();
+  ({yearly:renderYearly,monthly:renderMonthly,normals:renderNormals,decades:renderDecades,heatmap:renderHeatmap,stripes:renderStripes,thismonth:renderThismonth,compare:renderCompare,extremes:renderExtremes})[currentView]();
 }
 
 // Init
@@ -1016,7 +1493,7 @@ const WMO_DESC={0:'Selkeä',1:'Pääosin selkeä',2:'Puolipilvinen',3:'Pilvinen'
 const WEEKDAYS_FI=['Su','Ma','Ti','Ke','To','Pe','La'];
 
 function fetchLiveWeather(){
-  const url='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m&timezone=Europe%2FHelsinki&forecast_days=7';
+  const url='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m,weather_code,precipitation,wind_speed_10m,relative_humidity_2m&timezone=Europe%2FHelsinki&forecast_days=7';
 
   // Show historical comparison as fallback
   const now=new Date();
@@ -1048,7 +1525,7 @@ function fetchLiveWeather(){
         <div class="live-current">
           <div class="big" style="color:${fbDayAvg>=0?'#fb923c':'#38bdf8'}">${fbDayAvg>0?'+':''}${fbDayAvg}°</div>
           <div class="vs">
-            <div>Päivän keskiarvo (85v)</div>
+            <div>Päivän keskiarvo (1940–)</div>
             <div>${monthName}n normaali: <strong>${norm.t>0?'+':''}${norm.t}°</strong></div>
             <div>Keskim. ylin: <strong>${norm.hi>0?'+':''}${norm.hi}°</strong></div>
             <div>Sademäärä: <strong>${norm.p} mm/kk</strong></div>
@@ -1064,7 +1541,7 @@ function fetchLiveWeather(){
     renderLiveWeather(data);
   }).catch(err=>{
     document.getElementById('liveContent').innerHTML=fallbackHTML;
-    document.getElementById('liveUpdated').textContent=curDay+'.'+curMonthNum+'. historiallinen keskiarvo (1940–2024)';
+    document.getElementById('liveUpdated').textContent=curDay+'.'+curMonthNum+'. historiallinen keskiarvo (1940–tänään)';
   });
 }
 
@@ -1096,7 +1573,9 @@ function renderLiveWeather(data){
   const windDir=dirs[Math.round(c.wind_direction_10m/45)%8];
   const windDirFi={N:'pohjoinen',NE:'koillinen',E:'itä',SE:'kaakko',S:'etelä',SW:'lounas',W:'länsi',NW:'luode'}[windDir]||'';
 
-  // Forecast cards
+  // Forecast cards (clickable for hourly detail)
+  // Store hourly data globally for click handler
+  window._liveData=data;
   let forecastHTML='';
   for(let i=0;i<d.time.length;i++){
     const date=new Date(d.time[i]+'T12:00');
@@ -1107,11 +1586,12 @@ function renderLiveWeather(data){
     const hi=Math.round(d.temperature_2m_max[i]);
     const lo=Math.round(d.temperature_2m_min[i]);
     const isToday=i===0;
-    forecastHTML+=`<div class="live-fday" style="${isToday?'border-color:rgba(59,130,246,0.2);background:rgba(30,58,138,0.15)':''}">
-      <div class="day">${isToday?'Tänään':wd}</div>
+    forecastHTML+=`<div class="live-fday${isToday?' selected':''}" onclick="showHourlyDetail(${i})" data-fday="${i}" style="${isToday?'border-color:rgba(59,130,246,0.4);background:rgba(30,58,138,0.2)':''}">
+      <div class="day">${isToday?'Tänään':wd} ${dd}</div>
       <div class="icon">${icon}</div>
       <div class="hi" style="color:${hi>=0?'#fb923c':'#38bdf8'}">${hi>0?'+':''}${hi}°</div>
       <div class="lo">${lo>0?'+':''}${lo}°</div>
+      <div class="tap-hint">▼ tunnit</div>
     </div>`;
   }
 
@@ -1162,18 +1642,19 @@ function renderLiveWeather(data){
     <div style="margin-top:24px">
       <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">7 päivän ennuste vs. historiallinen normaali</div>
       <div class="live-forecast">${forecastHTML}</div>
+      <div class="hourly-detail visible" id="hourlyDetail"></div>
       <div class="forecast-history-wrap"><canvas id="cForecastHist"></canvas></div>
     </div>
     <div style="margin-top:20px;padding:16px 20px;background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.04);border-radius:14px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
       <div style="font-size:12px;color:#475569;flex:1;min-width:200px">
-        <strong style="color:#94a3b8">Historiallinen vertailu:</strong> Päivän ${curDay}.${curMonthNum}. keskiarvo 1940–2024 on <strong style="color:${dayAvg>=0?'#fb923c':'#38bdf8'}">${dayAvg>0?'+':''}${dayAvg}°C</strong> (${monthName}: ${norm.t>0?'+':''}${norm.t}°C).
+        <strong style="color:#94a3b8">Historiallinen vertailu:</strong> Päivän ${curDay}.${curMonthNum}. keskiarvo 1940–tänään on <strong style="color:${dayAvg>=0?'#fb923c':'#38bdf8'}">${dayAvg>0?'+':''}${dayAvg}°C</strong> (${monthName}: ${norm.t>0?'+':''}${norm.t}°C).
         Nyt on <span class="live-diff ${diffClass}" style="display:inline;padding:2px 8px;font-size:12px">${diffSign}${diff}°</span> päivän normaalista.
       </div>
     </div>
     <div class="record-live-box">
       <div class="record-live-card"><div class="rv" style="color:#fb923c" id="recHi">–</div><div class="rl" id="recHiLbl">Tämän päivän ennätysylin</div></div>
       <div class="record-live-card"><div class="rv" style="color:#38bdf8" id="recLo">–</div><div class="rl" id="recLoLbl">Tämän päivän ennätysalin</div></div>
-      <div class="record-live-card"><div class="rv" style="color:#94a3b8" id="recAvg">–</div><div class="rl">Päivän keskiarvo (85v)</div></div>
+      <div class="record-live-card"><div class="rv" style="color:#94a3b8" id="recAvg">–</div><div class="rl">Päivän keskiarvo (1940–)</div></div>
     </div>
     <div style="margin-top:24px">
       <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Tämän päivän tuntilämpötilat vs. historia</div>
@@ -1223,6 +1704,9 @@ function renderLiveWeather(data){
       {label:'Ennuste alin',data:fMin,borderColor:'#38bdf8',backgroundColor:'transparent',fill:false,borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#060a13',pointBorderColor:'#38bdf8',pointBorderWidth:2,tension:0.3,order:1}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
   },100);
+
+  // Show today's hourly detail by default
+  setTimeout(()=>showHourlyDetail(0),200);
 
   // ═══ RECORDS FOR TODAY ═══
   setTimeout(()=>{
@@ -1282,7 +1766,101 @@ function renderLiveWeather(data){
   fetchCumulativeRainfall();
 }
 
+// ═══ HOURLY DETAIL FOR FORECAST DAY ═══
+function showHourlyDetail(dayIdx){
+  const data=window._liveData;
+  if(!data||!data.hourly)return;
+  const d=data.daily;
+  const h=data.hourly;
+  const panel=document.getElementById('hourlyDetail');
+  if(!panel)return;
 
+  // Highlight selected day card
+  document.querySelectorAll('.live-fday').forEach(el=>{
+    el.classList.remove('selected');
+    el.style.borderColor='';el.style.background='';
+  });
+  const card=document.querySelector('[data-fday="'+dayIdx+'"]');
+  if(card)card.classList.add('selected');
+
+  const dayStr=d.time[dayIdx];
+  const dayDate=new Date(dayStr+'T12:00');
+  const dayLabel=dayIdx===0?'Tänään':(WEEKDAYS_FI[dayDate.getDay()]+' '+dayDate.getDate()+'.'+(dayDate.getMonth()+1)+'.');
+  const code=d.weather_code[dayIdx];
+  const desc=WMO_DESC[code]||'–';
+  const icon=WMO_ICONS[code]||'';
+  const hi=d.temperature_2m_max[dayIdx];
+  const lo=d.temperature_2m_min[dayIdx];
+  const precip=d.precipitation_sum[dayIdx];
+
+  // Get hourly data for this day
+  const hours=[],temps=[],codes=[],precips=[],winds=[],humids=[];
+  for(let i=0;i<h.time.length;i++){
+    if(h.time[i].startsWith(dayStr)){
+      const hr=new Date(h.time[i]).getHours();
+      hours.push(hr);
+      temps.push(h.temperature_2m[i]);
+      codes.push(h.weather_code?h.weather_code[i]:null);
+      precips.push(h.precipitation?h.precipitation[i]:0);
+      winds.push(h.wind_speed_10m?h.wind_speed_10m[i]:null);
+      humids.push(h.relative_humidity_2m?h.relative_humidity_2m[i]:null);
+    }
+  }
+
+  // Build hourly cells
+  let cellsHTML='';
+  temps.forEach((t,i)=>{
+    const hIcon=codes[i]!=null?(WMO_ICONS[codes[i]]||''):'';
+    const color=t>=0?'#fb923c':'#38bdf8';
+    cellsHTML+=`<div class="hourly-cell" title="${hours[i]}:00 — ${t!=null?t.toFixed(1):'–'}°C${precips[i]>0?' | sade: '+precips[i].toFixed(1)+'mm':''}${winds[i]!=null?' | tuuli: '+winds[i]+' km/h':''}">
+      <div class="hh">${String(hours[i]).padStart(2,'0')}</div>
+      <div class="hi-icon">${hIcon}</div>
+      <div class="ht" style="color:${color}">${t!=null?Math.round(t)+'°':'–'}</div>
+    </div>`;
+  });
+
+  // Summary stats
+  const validTemps=temps.filter(t=>t!=null);
+  const dayPrecipTotal=precips.reduce((a,b)=>a+b,0);
+  const maxWind=winds.filter(w=>w!=null).length?Math.max(...winds.filter(w=>w!=null)):null;
+
+  panel.innerHTML=`
+    <h4>${icon} ${dayLabel} — ${desc}</h4>
+    <div class="detail-sub">Ylin ${hi!=null?(hi>0?'+':'')+hi.toFixed(1)+'°':'–'} · Alin ${lo!=null?(lo>0?'+':'')+lo.toFixed(1)+'°':'–'} · Sade ${dayPrecipTotal.toFixed(1)} mm${maxWind!=null?' · Max tuuli '+maxWind+' km/h':''}</div>
+    <div class="hourly-detail-grid">${cellsHTML}</div>
+    <div class="hourly-chart-wrap"><canvas id="cHourlyDay"></canvas></div>`;
+  panel.className='hourly-detail visible';
+
+  // Hourly chart
+  setTimeout(()=>{
+    const canvas=document.getElementById('cHourlyDay');
+    if(!canvas)return;
+    destroyChart('cHourlyDay');
+    const labels=hours.map(h=>h+':00');
+
+    const datasets=[{
+      label:'Lämpötila °C',data:temps,borderColor:'#fb923c',backgroundColor:'rgba(251,146,60,0.1)',
+      fill:true,tension:0.3,pointRadius:3,borderWidth:2.5,pointBackgroundColor:getTheme()==='dark'?'#060a13':'#f8fafc',pointBorderColor:'#fb923c',pointBorderWidth:1.5,yAxisID:'y'
+    }];
+    if(precips.some(p=>p>0)){
+      datasets.push({label:'Sade mm',data:precips,type:'bar',backgroundColor:'rgba(52,211,153,0.4)',borderRadius:3,yAxisID:'y1',order:2});
+    }
+
+    charts.cHourlyDay=new Chart(canvas.getContext('2d'),{type:'line',data:{labels,datasets},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569',font:{size:11}}},
+          tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>{
+            if(c.dataset.yAxisID==='y1')return c.parsed.y.toFixed(1)+' mm';
+            return(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–');
+          }}}},
+        scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},
+          y:{position:'left',grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},ticks:{callback:v=>v+'°'}},
+          y1:{position:'right',display:precips.some(p=>p>0),grid:{display:false},beginAtZero:true,ticks:{callback:v=>v+'mm'}}
+        }
+      }
+    });
+  },50);
+}
 
 // ═══ CUMULATIVE RAINFALL TRACKER ═══
 function fetchCumulativeRainfall(){
