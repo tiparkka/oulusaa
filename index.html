@@ -542,12 +542,15 @@ async function fetchArchiveData(){
     throw new Error('API-haku epäonnistui '+start.slice(0,4)+'–'+end.slice(0,4)+': liian monta 429-vastausta');
   }
 
-  // Launch all archive chunks with 600ms stagger — parallel but gentle
-  const results=await Promise.all(
-    ARCHIVE_CHUNKS.map(([s,e],i)=>
-      new Promise(r=>setTimeout(r,i*600)).then(()=>fetchChunk(s,e,i))
-    )
-  );
+  // Fetch archive chunks in batches of 2, with 2s delay between batches
+  const BATCH=2;
+  const results=[];
+  for(let b=0;b<ARCHIVE_CHUNKS.length;b+=BATCH){
+    if(b>0) await new Promise(r=>setTimeout(r,2000));
+    const batch=ARCHIVE_CHUNKS.slice(b,b+BATCH);
+    const batchResults=await Promise.all(batch.map(([s,e],i)=>fetchChunk(s,e,b+i)));
+    results.push(...batchResults);
+  }
 
   // Merge archive results in order
   const allTime=[],allMean=[],allMax=[],allMin=[],allPrecip=[],allSnow=[];
