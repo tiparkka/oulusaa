@@ -162,8 +162,20 @@
   .live-diff.cold{background:rgba(56,189,248,0.12);color:#38bdf8}
   .live-diff.neutral{background:rgba(148,163,184,0.1);color:#94a3b8}
   .live-forecast{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:16px}
-  .live-fday{background:var(--card-bg2);border:1px solid var(--border3);border-radius:12px;padding:12px 8px;text-align:center;transition:background 0.3s}
+  .live-fday{background:var(--card-bg2);border:1px solid var(--border3);border-radius:12px;padding:12px 8px;text-align:center;transition:background 0.3s,transform 0.15s,box-shadow 0.15s;cursor:pointer}
+  .live-fday:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.2)}
+  .live-fday.selected{border-color:rgba(59,130,246,0.4);background:rgba(30,58,138,0.2);box-shadow:0 4px 16px rgba(59,130,246,0.15)}
   .live-fday .day{font-size:11px;color:var(--text4);font-weight:600}
+  .live-fday .tap-hint{font-size:9px;color:var(--text5);margin-top:4px;opacity:0.6}
+  .hourly-detail{margin-top:20px;padding:24px;background:var(--card-bg);border:1px solid var(--border);border-radius:18px;display:none;animation:fadeUp 0.3s ease-out;transition:background 0.3s}
+  .hourly-detail.visible{display:block}
+  .hourly-detail h4{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px}
+  .hourly-detail .detail-sub{font-size:12px;color:var(--text4);margin-bottom:16px}
+  .hourly-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;margin-top:16px}
+  .hourly-cell{background:var(--card-bg2);border:1px solid var(--border3);border-radius:8px;padding:8px 4px;text-align:center;transition:background 0.3s}
+  .hourly-cell .hh{font-size:10px;color:var(--text4);font-weight:600}
+  .hourly-cell .ht{font-size:14px;font-weight:800;margin-top:2px}
+  .hourly-cell .hi-icon{font-size:14px;margin-top:2px}
   .live-fday .hi{font-size:18px;font-weight:800;margin-top:4px}
   .live-fday .lo{font-size:13px;color:var(--text4);margin-top:2px}
   .live-fday .icon{font-size:20px;margin-top:4px}
@@ -1352,7 +1364,7 @@ const WMO_DESC={0:'Selkeä',1:'Pääosin selkeä',2:'Puolipilvinen',3:'Pilvinen'
 const WEEKDAYS_FI=['Su','Ma','Ti','Ke','To','Pe','La'];
 
 function fetchLiveWeather(){
-  const url='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m&timezone=Europe%2FHelsinki&forecast_days=7';
+  const url='https://api.open-meteo.com/v1/forecast?latitude=65.0121&longitude=25.4651&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m,weather_code,precipitation,wind_speed_10m,relative_humidity_2m&timezone=Europe%2FHelsinki&forecast_days=7';
 
   // Show historical comparison as fallback
   const now=new Date();
@@ -1432,7 +1444,9 @@ function renderLiveWeather(data){
   const windDir=dirs[Math.round(c.wind_direction_10m/45)%8];
   const windDirFi={N:'pohjoinen',NE:'koillinen',E:'itä',SE:'kaakko',S:'etelä',SW:'lounas',W:'länsi',NW:'luode'}[windDir]||'';
 
-  // Forecast cards
+  // Forecast cards (clickable for hourly detail)
+  // Store hourly data globally for click handler
+  window._liveData=data;
   let forecastHTML='';
   for(let i=0;i<d.time.length;i++){
     const date=new Date(d.time[i]+'T12:00');
@@ -1443,11 +1457,12 @@ function renderLiveWeather(data){
     const hi=Math.round(d.temperature_2m_max[i]);
     const lo=Math.round(d.temperature_2m_min[i]);
     const isToday=i===0;
-    forecastHTML+=`<div class="live-fday" style="${isToday?'border-color:rgba(59,130,246,0.2);background:rgba(30,58,138,0.15)':''}">
-      <div class="day">${isToday?'Tänään':wd}</div>
+    forecastHTML+=`<div class="live-fday${isToday?' selected':''}" onclick="showHourlyDetail(${i})" data-fday="${i}" style="${isToday?'border-color:rgba(59,130,246,0.4);background:rgba(30,58,138,0.2)':''}">
+      <div class="day">${isToday?'Tänään':wd} ${dd}</div>
       <div class="icon">${icon}</div>
       <div class="hi" style="color:${hi>=0?'#fb923c':'#38bdf8'}">${hi>0?'+':''}${hi}°</div>
       <div class="lo">${lo>0?'+':''}${lo}°</div>
+      <div class="tap-hint">▼ tunnit</div>
     </div>`;
   }
 
@@ -1498,6 +1513,7 @@ function renderLiveWeather(data){
     <div style="margin-top:24px">
       <div style="font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">7 päivän ennuste vs. historiallinen normaali</div>
       <div class="live-forecast">${forecastHTML}</div>
+      <div class="hourly-detail visible" id="hourlyDetail"></div>
       <div class="forecast-history-wrap"><canvas id="cForecastHist"></canvas></div>
     </div>
     <div style="margin-top:20px;padding:16px 20px;background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.04);border-radius:14px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
@@ -1560,6 +1576,9 @@ function renderLiveWeather(data){
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:'rgba(148,163,184,0.04)'},ticks:{callback:v=>v+'°'}}}}});
   },100);
 
+  // Show today's hourly detail by default
+  setTimeout(()=>showHourlyDetail(0),200);
+
   // ═══ RECORDS FOR TODAY ═══
   setTimeout(()=>{
     const allDayHi=[],allDayLo=[],allDayMean=[];
@@ -1618,7 +1637,101 @@ function renderLiveWeather(data){
   fetchCumulativeRainfall();
 }
 
+// ═══ HOURLY DETAIL FOR FORECAST DAY ═══
+function showHourlyDetail(dayIdx){
+  const data=window._liveData;
+  if(!data||!data.hourly)return;
+  const d=data.daily;
+  const h=data.hourly;
+  const panel=document.getElementById('hourlyDetail');
+  if(!panel)return;
 
+  // Highlight selected day card
+  document.querySelectorAll('.live-fday').forEach(el=>{
+    el.classList.remove('selected');
+    el.style.borderColor='';el.style.background='';
+  });
+  const card=document.querySelector('[data-fday="'+dayIdx+'"]');
+  if(card)card.classList.add('selected');
+
+  const dayStr=d.time[dayIdx];
+  const dayDate=new Date(dayStr+'T12:00');
+  const dayLabel=dayIdx===0?'Tänään':(WEEKDAYS_FI[dayDate.getDay()]+' '+dayDate.getDate()+'.'+(dayDate.getMonth()+1)+'.');
+  const code=d.weather_code[dayIdx];
+  const desc=WMO_DESC[code]||'–';
+  const icon=WMO_ICONS[code]||'';
+  const hi=d.temperature_2m_max[dayIdx];
+  const lo=d.temperature_2m_min[dayIdx];
+  const precip=d.precipitation_sum[dayIdx];
+
+  // Get hourly data for this day
+  const hours=[],temps=[],codes=[],precips=[],winds=[],humids=[];
+  for(let i=0;i<h.time.length;i++){
+    if(h.time[i].startsWith(dayStr)){
+      const hr=new Date(h.time[i]).getHours();
+      hours.push(hr);
+      temps.push(h.temperature_2m[i]);
+      codes.push(h.weather_code?h.weather_code[i]:null);
+      precips.push(h.precipitation?h.precipitation[i]:0);
+      winds.push(h.wind_speed_10m?h.wind_speed_10m[i]:null);
+      humids.push(h.relative_humidity_2m?h.relative_humidity_2m[i]:null);
+    }
+  }
+
+  // Build hourly cells
+  let cellsHTML='';
+  temps.forEach((t,i)=>{
+    const hIcon=codes[i]!=null?(WMO_ICONS[codes[i]]||''):'';
+    const color=t>=0?'#fb923c':'#38bdf8';
+    cellsHTML+=`<div class="hourly-cell" title="${hours[i]}:00 — ${t!=null?t.toFixed(1):'–'}°C${precips[i]>0?' | sade: '+precips[i].toFixed(1)+'mm':''}${winds[i]!=null?' | tuuli: '+winds[i]+' km/h':''}">
+      <div class="hh">${String(hours[i]).padStart(2,'0')}</div>
+      <div class="hi-icon">${hIcon}</div>
+      <div class="ht" style="color:${color}">${t!=null?Math.round(t)+'°':'–'}</div>
+    </div>`;
+  });
+
+  // Summary stats
+  const validTemps=temps.filter(t=>t!=null);
+  const dayPrecipTotal=precips.reduce((a,b)=>a+b,0);
+  const maxWind=winds.filter(w=>w!=null).length?Math.max(...winds.filter(w=>w!=null)):null;
+
+  panel.innerHTML=`
+    <h4>${icon} ${dayLabel} — ${desc}</h4>
+    <div class="detail-sub">Ylin ${hi!=null?(hi>0?'+':'')+hi.toFixed(1)+'°':'–'} · Alin ${lo!=null?(lo>0?'+':'')+lo.toFixed(1)+'°':'–'} · Sade ${dayPrecipTotal.toFixed(1)} mm${maxWind!=null?' · Max tuuli '+maxWind+' km/h':''}</div>
+    <div class="hourly-detail-grid">${cellsHTML}</div>
+    <div class="hourly-chart-wrap"><canvas id="cHourlyDay"></canvas></div>`;
+  panel.className='hourly-detail visible';
+
+  // Hourly chart
+  setTimeout(()=>{
+    const canvas=document.getElementById('cHourlyDay');
+    if(!canvas)return;
+    destroyChart('cHourlyDay');
+    const labels=hours.map(h=>h+':00');
+
+    const datasets=[{
+      label:'Lämpötila °C',data:temps,borderColor:'#fb923c',backgroundColor:'rgba(251,146,60,0.1)',
+      fill:true,tension:0.3,pointRadius:3,borderWidth:2.5,pointBackgroundColor:getTheme()==='dark'?'#060a13':'#f8fafc',pointBorderColor:'#fb923c',pointBorderWidth:1.5,yAxisID:'y'
+    }];
+    if(precips.some(p=>p>0)){
+      datasets.push({label:'Sade mm',data:precips,type:'bar',backgroundColor:'rgba(52,211,153,0.4)',borderRadius:3,yAxisID:'y1',order:2});
+    }
+
+    charts.cHourlyDay=new Chart(canvas.getContext('2d'),{type:'line',data:{labels,datasets},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569',font:{size:11}}},
+          tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>{
+            if(c.dataset.yAxisID==='y1')return c.parsed.y.toFixed(1)+' mm';
+            return(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°C':'–');
+          }}}},
+        scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},
+          y:{position:'left',grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},ticks:{callback:v=>v+'°'}},
+          y1:{position:'right',display:precips.some(p=>p>0),grid:{display:false},beginAtZero:true,ticks:{callback:v=>v+'mm'}}
+        }
+      }
+    });
+  },50);
+}
 
 // ═══ CUMULATIVE RAINFALL TRACKER ═══
 function fetchCumulativeRainfall(){
