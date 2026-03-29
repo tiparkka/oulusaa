@@ -206,14 +206,104 @@
   .footer-grid p,.footer-grid div.items{font-size:13px;color:var(--text5);line-height:2.2}
   .footer-bottom{border-top:1px solid var(--border3);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--text6)}
 
-  @media(max-width:700px){
+  /* ═══ MOBILE MENU ═══ */
+  .nav-menu-btn{display:none;background:var(--card-bg);border:1px solid var(--border);color:var(--text3);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+  .nav-menu-btn:hover{color:var(--text);border-color:var(--border2)}
+  .nav-mobile{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:var(--bg);z-index:99;padding:20px 24px;overflow-y:auto}
+  .nav-mobile.open{display:flex;flex-direction:column;gap:4px;animation:fadeUp 0.2s ease-out}
+  .nav-mobile button{background:var(--card-bg);border:1px solid var(--border);color:var(--text3);padding:14px 20px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:500;text-align:left;font-family:inherit;transition:all 0.2s;width:100%}
+  .nav-mobile button:hover,.nav-mobile button:active{color:var(--text);background:var(--card-bg2)}
+
+  /* ═══ TABLET (max 900px) ═══ */
+  @media(max-width:900px){
     .nav-links{display:none}
-    .hero h1{font-size:36px}
-    .hero h1 .sub{font-size:20px}
-    .controls{flex-direction:column;align-items:flex-start}
+    .nav-menu-btn{display:flex}
+    .hero{padding:70px 20px 60px}
+    .hero h1{font-size:clamp(32px,6vw,52px)}
+    .hero h1 .sub{font-size:clamp(18px,3vw,30px)}
+    .hero-stats{gap:12px}
+    .hero-stat{padding:20px 18px;border-radius:18px}
+    .hero-stat .val{font-size:28px}
+    .controls{flex-direction:column;align-items:stretch;gap:12px;margin:40px 0 28px}
+    .range-btns{justify-content:center}
+    .view-btns{flex-wrap:wrap;justify-content:center}
+    .view-btns button{padding:8px 14px;font-size:12px}
     .grid2{grid-template-columns:1fr}
-    .chart-wrap{height:280px}
-    .chart-wrap.short{height:220px}
+    .seasons{grid-template-columns:repeat(2,1fr)}
+    .decades-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+    .live-grid{grid-template-columns:1fr}
+    .live-forecast{grid-template-columns:repeat(7,1fr);gap:6px}
+    .live-fday .tap-hint{display:none}
+    .compare-selectors{gap:12px}
+    .compare-stat-grid{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+    .footer-grid{grid-template-columns:1fr;gap:32px}
+  }
+
+  /* ═══ MOBILE (max 600px) ═══ */
+  @media(max-width:600px){
+    nav{padding:0 16px}
+    .nav-inner{height:52px}
+    .nav-logo-icon{width:28px;height:28px;font-size:14px;border-radius:8px}
+    .theme-toggle,.nav-menu-btn{width:32px;height:32px;font-size:16px;border-radius:8px}
+    .hero{padding:50px 16px 40px}
+    .hero h1{font-size:32px}
+    .hero h1 .sub{font-size:18px}
+    .hero p.desc{font-size:14px;margin:20px 0 32px}
+    .hero-stats{flex-direction:column;gap:10px}
+    .hero-stat{flex:none;padding:18px 16px;border-radius:16px}
+    .hero-stat .val{font-size:26px}
+    .hero-stat .lbl{font-size:11px}
+    .content{padding:0 16px 60px}
+    .range-btns button,.view-btns button{padding:8px 12px;font-size:11px}
+    .panel{padding:20px 16px;border-radius:20px;margin-bottom:20px}
+    .panel h3{font-size:16px}
+    .chart-wrap{height:250px}
+    .chart-wrap.short{height:200px}
+    .live-section{padding:24px 16px 0}
+    .live-panel{padding:20px 16px;border-radius:20px}
+    .live-current .big{font-size:38px}
+    .live-forecast{grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:5px}
+    .live-fday{padding:10px 4px;border-radius:10px}
+    .live-fday .hi{font-size:16px}
+    .live-fday .lo{font-size:11px}
+    .live-fday .icon{font-size:18px}
+    .live-fday .day{font-size:10px}
+    .live-fday .tap-hint{display:none}
+    .hourly-detail{padding:16px;border-radius:14px}
+    .hourly-detail-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:3px}
+    .hourly-cell{padding:6px 2px;border-radius:6px}
+    .hourly-cell .ht{font-size:12px}
+    .hourly-cell .hh{font-size:9px}
+    .hourly-cell .hi-icon{font-size:12px}
+    .hourly-chart-wrap{height:200px}
+    .record-box,.record-live-box{gap:8px}
+    .record-card,.record-live-card{padding:12px;border-radius:12px;min-width:90px}
+    .record-card .rv,.record-live-card .rv{font-size:18px}
+    .compare-stat-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+    .compare-stat{padding:10px 12px;border-radius:12px}
+    .compare-stat .cv{font-size:18px}
+    .forecast-history-wrap{height:240px}
+    .month-history-wrap{height:220px}
+    .stripes-wrap{height:80px}
+    .normals-table{font-size:12px}
+    .normals-table th,.normals-table td{padding:8px 10px}
+    .season-card{padding:20px 16px;border-radius:16px}
+    .season-card .temp{font-size:28px}
+    .season-card .icon{font-size:32px}
+    .rain-tracker{padding:16px}
+    footer{padding:36px 16px}
+    .footer-bottom{flex-direction:column;text-align:center}
+  }
+
+  /* ═══ SMALL PHONE (max 380px) ═══ */
+  @media(max-width:380px){
+    .hero h1{font-size:26px}
+    .hero h1 .sub{font-size:16px}
+    .hero-stat .val{font-size:22px}
+    .live-current .big{font-size:32px}
+    .live-forecast{grid-template-columns:repeat(auto-fill,minmax(56px,1fr))}
+    .live-fday .hi{font-size:14px}
+    .view-btns button{padding:7px 10px;font-size:10px}
   }
 
   .hourly-chart-wrap{position:relative;height:250px;margin-top:16px}
@@ -253,21 +343,35 @@
       <span style="font-size:17px;font-weight:700;letter-spacing:-0.02em;color:var(--text2)">OuluSää</span>
       <span style="font-size:10px;color:#3b82f6;font-weight:600;background:rgba(59,130,246,0.1);padding:3px 10px;border-radius:99px">BETA</span>
     </div>
-    <div style="display:flex;align-items:center;gap:12px">
-    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Vaihda teemaa">☀️</button>
-    <div class="nav-links">
-      <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Yleiskatsaus</button>
-      <button onclick="document.getElementById('liveSection').scrollIntoView({behavior:'smooth'})" style="color:#34d399">● Live</button>
-      <button onclick="switchView('yearly')">Lämpötila</button>
-      <button onclick="switchView('monthly')">Kuukausittain</button>
-      <button onclick="switchView('normals')">Normaalit</button>
-      <button onclick="switchView('decades')">Vuosikymmenet</button>
-      <button onclick="switchView('heatmap')">Lämpökartta</button>
-      <button onclick="switchView('stripes')">Ilmastoraidat</button>
-    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Vaihda teemaa">☀️</button>
+      <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleMobileNav()" title="Valikko">☰</button>
+      <div class="nav-links">
+        <button onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Yleiskatsaus</button>
+        <button onclick="document.getElementById('liveSection').scrollIntoView({behavior:'smooth'})" style="color:#34d399">● Live</button>
+        <button onclick="switchView('yearly')">Lämpötila</button>
+        <button onclick="switchView('monthly')">Kuukausittain</button>
+        <button onclick="switchView('normals')">Normaalit</button>
+        <button onclick="switchView('decades')">Vuosikymmenet</button>
+        <button onclick="switchView('heatmap')">Lämpökartta</button>
+        <button onclick="switchView('stripes')">Ilmastoraidat</button>
+      </div>
     </div>
   </div>
 </nav>
+<div class="nav-mobile" id="navMobile">
+  <button onclick="mobileNav('hero')">🏠 Yleiskatsaus</button>
+  <button onclick="mobileNav('liveSection')">🟢 Live-sää</button>
+  <button onclick="mobileNavView('yearly')">📊 Vuosittain</button>
+  <button onclick="mobileNavView('monthly')">📅 Kuukausittain</button>
+  <button onclick="mobileNavView('normals')">📏 Normaalit</button>
+  <button onclick="mobileNavView('decades')">📈 Vuosikymmenet</button>
+  <button onclick="mobileNavView('heatmap')">🗓️ Lämpökartta</button>
+  <button onclick="mobileNavView('stripes')">🌡️ Ilmastoraidat</button>
+  <button onclick="mobileNavView('thismonth')">📆 Tämä kuukausi</button>
+  <button onclick="mobileNavView('compare')">⚖️ Vertailu</button>
+  <button onclick="mobileNavView('extremes')">🔥 Ääripäivät</button>
+</div>
 
 <!-- HERO -->
 <header class="hero" id="hero">
@@ -647,6 +751,31 @@ function toggleTheme(){
 }
 // Apply saved theme immediately
 applyTheme(getTheme());
+
+// ═══ MOBILE NAV ═══
+function toggleMobileNav(){
+  const nav=document.getElementById('navMobile');
+  const btn=document.getElementById('navMenuBtn');
+  const isOpen=nav.classList.contains('open');
+  nav.classList.toggle('open');
+  btn.textContent=isOpen?'☰':'✕';
+  document.body.style.overflow=isOpen?'':'hidden';
+}
+function closeMobileNav(){
+  const nav=document.getElementById('navMobile');
+  const btn=document.getElementById('navMenuBtn');
+  nav.classList.remove('open');
+  btn.textContent='☰';
+  document.body.style.overflow='';
+}
+function mobileNav(id){
+  closeMobileNav();
+  setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth'}),100);
+}
+function mobileNavView(v){
+  closeMobileNav();
+  setTimeout(()=>switchView(v),100);
+}
 
 // ═══ CHART HELPERS ═══
 Chart.defaults.color=getTheme()==='dark'?'#64748b':'#475569';
