@@ -1440,15 +1440,178 @@ function renderExtremes(){
       <div class="chart-wrap short"><canvas id="cFrostDays"></canvas></div>
     </div>`;
 
+  // ═══ VUODENAIKOJEN TRENDI ═══
+  const seasonMap={Talvi:[12,1,2],Kevät:[3,4,5],Kesä:[6,7,8],Syksy:[9,10,11]};
+  const seasonNames=Object.keys(seasonMap);
+  const seasonYearTemps={Talvi:[],Kevät:[],Kesä:[],Syksy:[]};
+
+  years.forEach(yr=>{
+    const y=yr.year;
+    seasonNames.forEach(sn=>{
+      const months=seasonMap[sn];
+      const mTemps=months.map(m=>{
+        const mo=MO.find(x=>x.year===(m===12?y-1:y)&&x.month===m);
+        return mo?mo.temp:null;
+      }).filter(t=>t!=null);
+      seasonYearTemps[sn].push(mTemps.length>=2?+(mTemps.reduce((a,b)=>a+b,0)/mTemps.length).toFixed(1):null);
+    });
+  });
+
+  const seasonColors={Talvi:'#38bdf8',Kevät:'#34d399',Kesä:'#fb923c',Syksy:'#f59e0b'};
+
+  el.innerHTML+=`
+    <div class="panel">
+      <h3>Vuodenaikojen lämpeneminen</h3>
+      <p class="sub">Onko talvi lämennyt enemmän kuin kesä? Vuodenaikojen keskilämpötila ${s}–${e}</p>
+      <div class="chart-wrap" style="height:400px"><canvas id="cSeasonTrend"></canvas></div>
+    </div>`;
+
+  // ═══ LÄMPÖSUMMA ═══
+  const heatSums=[];
+  years.forEach(yr=>{
+    const y=yr.year;
+    const d=DAILY[y];
+    if(!d){heatSums.push(null);return;}
+    let sum=0;
+    for(let m=1;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let i=0;i<md.dim;i++){
+        const t=md.days[i];
+        if(t!=null&&t>5) sum+=t-5;
+      }
+    }
+    heatSums.push(+sum.toFixed(0));
+  });
+
+  const validHS=heatSums.filter(h=>h!=null);
+  const hsAvg=validHS.length?(validHS.reduce((a,b)=>a+b,0)/validHS.length).toFixed(0):0;
+  const hsTrend=validHS.length>=10?((validHS.slice(-5).reduce((a,b)=>a+b,0)/5)-(validHS.slice(0,5).reduce((a,b)=>a+b,0)/5)).toFixed(0):0;
+
+  el.innerHTML+=`
+    <div class="panel">
+      <h3>Kasvukauden lämpösumma</h3>
+      <p class="sub">Kumulatiivinen lämpösumma (päivät >+5°C, summa ylitteestä) — mittaa kasvukauden tehokkuutta</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${hsAvg}</div><div class="cl">Keskimäärin °Cvrk</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${Math.max(...validHS)}</div><div class="cl">Korkein (${labels[heatSums.indexOf(Math.max(...validHS))]})</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${hsTrend>0?'#f87171':'#34d399'}">${hsTrend>0?'+':''}${hsTrend}</div><div class="cl">Muutos °Cvrk</div></div>
+      </div>
+      <div class="chart-wrap short"><canvas id="cHeatSum"></canvas></div>
+    </div>`;
+
+  // ═══ JAKSOVERTAILU ═══
+  const period1={s:1961,e:1990,label:'1961–1990'};
+  const period2={s:1991,e:2020,label:'1991–2020'};
+  const p1temps=[],p2temps=[],p1precip=[],p2precip=[];
+  for(let m=1;m<=12;m++){
+    const m1=MO.filter(x=>x.month===m&&x.year>=period1.s&&x.year<=period1.e&&x.temp!=null);
+    const m2=MO.filter(x=>x.month===m&&x.year>=period2.s&&x.year<=period2.e&&x.temp!=null);
+    p1temps.push(m1.length?+(m1.reduce((a,x)=>a+x.temp,0)/m1.length).toFixed(1):null);
+    p2temps.push(m2.length?+(m2.reduce((a,x)=>a+x.temp,0)/m2.length).toFixed(1):null);
+    p1precip.push(m1.length?+(m1.reduce((a,x)=>a+x.precip,0)/m1.length).toFixed(0):null);
+    p2precip.push(m2.length?+(m2.reduce((a,x)=>a+x.precip,0)/m2.length).toFixed(0):null);
+  }
+  const p1avg=p1temps.filter(t=>t!=null);
+  const p2avg=p2temps.filter(t=>t!=null);
+  const p1mean=p1avg.length?(p1avg.reduce((a,b)=>a+b,0)/p1avg.length).toFixed(1):null;
+  const p2mean=p2avg.length?(p2avg.reduce((a,b)=>a+b,0)/p2avg.length).toFixed(1):null;
+  const periodDiff=p1mean&&p2mean?(p2mean-p1mean).toFixed(1):null;
+
+  el.innerHTML+=`
+    <div class="panel">
+      <h3>Jaksovertailu: ${period1.label} vs. ${period2.label}</h3>
+      <p class="sub">WMO:n normaalijaksojen vertailu — kuinka paljon ilmasto on muuttunut 30 vuodessa?</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#818cf8">${p1mean!=null?(+p1mean>0?'+':'')+p1mean+'°':'–'}</div><div class="cl">${period1.label} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${p2mean!=null?(+p2mean>0?'+':'')+p2mean+'°':'–'}</div><div class="cl">${period2.label} keskiarvo</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#f87171">${periodDiff!=null?(+periodDiff>0?'+':'')+periodDiff+'°':'–'}</div><div class="cl">Lämpeneminen</div></div>
+      </div>
+      <div class="grid2">
+        <div style="position:relative"><h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Kuukausilämpötilat</h3><div class="chart-wrap short"><canvas id="cPeriodTemp"></canvas></div></div>
+        <div style="position:relative"><h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Kuukausisademäärät</h3><div class="chart-wrap short"><canvas id="cPeriodPrecip"></canvas></div></div>
+      </div>
+    </div>`;
+
+  // ═══ ENSIMMÄINEN/VIIMEINEN PAKKASPÄIVÄ ═══
+  const firstFrost=[],lastFrost=[];
+  years.forEach(yr=>{
+    const y=yr.year;
+    const d=DAILY[y];
+    if(!d){firstFrost.push(null);lastFrost.push(null);return;}
+    // First frost: scan from Aug 1 (day 213) forward
+    let ff=null;
+    for(let m=8;m<=12;m++){
+      const md=d[m];
+      if(!md)continue;
+      for(let i=0;i<md.dim;i++){
+        const t=md.min&&md.min[i]!=null?md.min[i]:md.days[i];
+        if(t!=null&&t<0){
+          const dt=new Date(y,m-1,i+1);
+          ff=Math.floor((dt-new Date(y,0,1))/(86400000))+1;
+          break;
+        }
+      }
+      if(ff)break;
+    }
+    firstFrost.push(ff);
+    // Last frost: scan from Jun 30 backward (spring)
+    let lf=null;
+    for(let m=6;m>=1;m--){
+      const md=d[m];
+      if(!md)continue;
+      for(let i=md.dim-1;i>=0;i--){
+        const t=md.min&&md.min[i]!=null?md.min[i]:md.days[i];
+        if(t!=null&&t<0){
+          const dt=new Date(y,m-1,i+1);
+          lf=Math.floor((dt-new Date(y,0,1))/(86400000))+1;
+          break;
+        }
+      }
+      if(lf)break;
+    }
+    lastFrost.push(lf);
+  });
+
+  // Day-of-year to date string
+  function doyToDate(doy){
+    if(doy==null)return '–';
+    const d=new Date(2024,0,1);d.setDate(doy);
+    return d.getDate()+'.'+(d.getMonth()+1)+'.';
+  }
+
+  const validFF=firstFrost.filter(f=>f!=null);
+  const validLF=lastFrost.filter(f=>f!=null);
+  const ffAvg=validFF.length?Math.round(validFF.reduce((a,b)=>a+b,0)/validFF.length):null;
+  const lfAvg=validLF.length?Math.round(validLF.reduce((a,b)=>a+b,0)/validLF.length):null;
+  const ffTrend=validFF.length>=10?((validFF.slice(-5).reduce((a,b)=>a+b,0)/5)-(validFF.slice(0,5).reduce((a,b)=>a+b,0)/5)).toFixed(0):0;
+  const lfTrend=validLF.length>=10?((validLF.slice(-5).reduce((a,b)=>a+b,0)/5)-(validLF.slice(0,5).reduce((a,b)=>a+b,0)/5)).toFixed(0):0;
+  const growingSeason=ffAvg&&lfAvg?ffAvg-lfAvg:null;
+
+  el.innerHTML+=`
+    <div class="panel">
+      <h3>Pakkaskauden alku ja loppu</h3>
+      <p class="sub">Ensimmäinen syksyn pakkaspäivä (alin < 0°C) ja viimeinen kevään pakkaspäivä per vuosi</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="compare-stat"><div class="cv" style="color:#fb923c">${doyToDate(ffAvg)}</div><div class="cl">Keskim. 1. syyspakkanen</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#38bdf8">${doyToDate(lfAvg)}</div><div class="cl">Keskim. viim. kevätp.</div></div>
+        <div class="compare-stat"><div class="cv" style="color:#34d399">${growingSeason!=null?growingSeason+' pv':'–'}</div><div class="cl">Pakkaseton kausi</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${ffTrend>0?'#34d399':'#f87171'}">${ffTrend>0?'+':''}${ffTrend} pv</div><div class="cl">1. syyspack. muutos</div></div>
+        <div class="compare-stat"><div class="cv" style="color:${lfTrend<0?'#34d399':'#f87171'}">${lfTrend>0?'+':''}${lfTrend} pv</div><div class="cl">Viim. kevätp. muutos</div></div>
+      </div>
+      <div class="chart-wrap" style="height:400px"><canvas id="cFrostSeason"></canvas></div>
+    </div>`;
+
+  // ═══ RENDER ALL CHARTS ═══
+
   function makeBarChart(id,data,label,color,colorAlpha){
     const ctx=document.getElementById(id).getContext('2d');
     destroyChart(id);
-    // Moving average (10 year)
     const ma=data.map((v,i)=>{const w=Math.min(10,i+1);const sl=data.slice(Math.max(0,i-w+1),i+1);return+(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1);});
     charts[id]=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
       {type:'bar',label:label,data:data,backgroundColor:colorAlpha,borderRadius:3,borderSkipped:false,order:2},
       {type:'line',label:'10v liukuva ka.',data:ma,borderColor:color,borderWidth:2.5,pointRadius:0,tension:0.4,order:1}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:'rgba(148,163,184,0.04)'},beginAtZero:true,ticks:{callback:v=>v+' pv'}}}}});
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569',font:{size:11}}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},beginAtZero:true,ticks:{callback:v=>v+' pv'}}}}});
   }
 
   makeBarChart('cHotDays',hotDays,'Hellepäivät (>+25°C)','#fb923c','rgba(251,146,60,0.4)');
@@ -1456,6 +1619,70 @@ function renderExtremes(){
   makeBarChart('cColdDays',coldDays,'Kova pakkanen (<-20°C)','#38bdf8','rgba(56,189,248,0.4)');
   makeBarChart('cIceDays',iceDays,'Jääpäivät (max <0°C)','#818cf8','rgba(129,140,248,0.4)');
   makeBarChart('cFrostDays',frostDays,'Pakkaspäivät (min <0°C)','#a5b4fc','rgba(165,180,252,0.3)');
+
+  // Season trend chart
+  const ctxST=document.getElementById('cSeasonTrend');
+  if(ctxST){
+    destroyChart('cSeasonTrend');
+    const sDsets=seasonNames.map(sn=>({
+      label:sn,data:seasonYearTemps[sn],borderColor:seasonColors[sn],backgroundColor:'transparent',
+      borderWidth:2,pointRadius:0,tension:0.3
+    }));
+    // Add 10y moving averages
+    seasonNames.forEach(sn=>{
+      const raw=seasonYearTemps[sn];
+      const ma=raw.map((v,i)=>{const vals=raw.slice(Math.max(0,i-9),i+1).filter(x=>x!=null);return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):null;});
+      sDsets.push({label:sn+' (10v ka.)',data:ma,borderColor:seasonColors[sn],borderWidth:3.5,borderDash:[],pointRadius:0,tension:0.4,backgroundColor:'transparent'});
+    });
+    charts.cSeasonTrend=new Chart(ctxST.getContext('2d'),{type:'line',data:{labels,datasets:sDsets},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569',font:{size:11}}},
+          tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+'°':'–')}}},
+        scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},y:{grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},ticks:{callback:v=>v+'°'}}}}});
+  }
+
+  // Heat sum chart
+  makeBarChart('cHeatSum',heatSums.map(h=>h||0),'Lämpösumma °Cvrk','#34d399','rgba(52,211,153,0.3)');
+
+  // Period comparison charts
+  const ctxPT=document.getElementById('cPeriodTemp');
+  if(ctxPT){
+    destroyChart('cPeriodTemp');
+    charts.cPeriodTemp=new Chart(ctxPT.getContext('2d'),{type:'bar',data:{labels:MONTHS_FI,datasets:[
+      {label:period1.label,data:p1temps,backgroundColor:'rgba(129,140,248,0.5)',borderRadius:4,borderSkipped:false},
+      {label:period2.label,data:p2temps,backgroundColor:'rgba(251,146,60,0.5)',borderRadius:4,borderSkipped:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'°C'}}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},ticks:{callback:v=>v+'°'}}}}});
+  }
+
+  const ctxPP=document.getElementById('cPeriodPrecip');
+  if(ctxPP){
+    destroyChart('cPeriodPrecip');
+    charts.cPeriodPrecip=new Chart(ctxPP.getContext('2d'),{type:'bar',data:{labels:MONTHS_FI,datasets:[
+      {label:period1.label,data:p1precip,backgroundColor:'rgba(129,140,248,0.4)',borderRadius:4,borderSkipped:false},
+      {label:period2.label,data:p2precip,backgroundColor:'rgba(52,211,153,0.4)',borderRadius:4,borderSkipped:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569'}},tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{font:{weight:600}}},y:{grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},ticks:{callback:v=>v+'mm'}}}}});
+  }
+
+  // Frost season chart
+  const ctxFS=document.getElementById('cFrostSeason');
+  if(ctxFS){
+    destroyChart('cFrostSeason');
+    const ffMA=firstFrost.map((v,i)=>{const vals=firstFrost.slice(Math.max(0,i-9),i+1).filter(x=>x!=null);return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(0):null;});
+    const lfMA=lastFrost.map((v,i)=>{const vals=lastFrost.slice(Math.max(0,i-9),i+1).filter(x=>x!=null);return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(0):null;});
+    charts.cFrostSeason=new Chart(ctxFS.getContext('2d'),{type:'line',data:{labels,datasets:[
+      {label:'1. syyspakkanen (päivä vuodesta)',data:firstFrost,borderColor:'#fb923c',backgroundColor:'rgba(251,146,60,0.08)',fill:true,tension:0.3,pointRadius:1.5,borderWidth:1.5,pointBackgroundColor:'#fb923c'},
+      {label:'Viim. keväpakkanen (päivä vuodesta)',data:lastFrost,borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,0.08)',fill:true,tension:0.3,pointRadius:1.5,borderWidth:1.5,pointBackgroundColor:'#38bdf8'},
+      {label:'1. syysp. 10v ka.',data:ffMA,borderColor:'#fb923c',borderWidth:3,pointRadius:0,tension:0.4,borderDash:[]},
+      {label:'Viim. kevätp. 10v ka.',data:lfMA,borderColor:'#38bdf8',borderWidth:3,pointRadius:0,tension:0.4,borderDash:[]}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{padding:12,usePointStyle:true,pointStyle:'circle',color:getTheme()==='dark'?'#94a3b8':'#475569',font:{size:11}}},
+        tooltip:{backgroundColor:'rgba(8,12,24,0.95)',padding:12,cornerRadius:10,callbacks:{
+          label:c=>{const v=c.parsed.y;return c.dataset.label+': '+(v!=null?doyToDate(Math.round(v))+' (päivä '+Math.round(v)+')':'–');}
+        }}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:15}},
+        y:{grid:{color:getTheme()==='dark'?'rgba(148,163,184,0.04)':'rgba(51,65,85,0.08)'},
+          ticks:{callback:v=>doyToDate(v)},reverse:false}}}});
+  }
 }
 
 // ═══ MAIN CONTROLLERS ═══
